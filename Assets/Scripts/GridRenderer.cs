@@ -18,7 +18,7 @@ public class GridRenderer : MonoBehaviour
     int minScale = 1;
     int maxScale = 40;
 
-    int thickLineMultiplier = 2;
+    float thickLineMultiplier = 1.5f;
 
     List<GameObject> gridLineList = new List<GameObject>();
 
@@ -39,7 +39,7 @@ public class GridRenderer : MonoBehaviour
         float yRatio = gridContainerRt.rect.height * 1.0f / appContainerRt.rect.height;
 
         Vector3 screenDimensions = CalculateScreenSizeInWorldCoords(xRatio, yRatio);
-        float pxThickness = 1 / (Screen.height / (Camera.main.orthographicSize * 2));
+        float pxThickness = 1f / (Screen.height / (Camera.main.orthographicSize * 2));
         RenderLines(screenDimensions, pxThickness);
         GetComponent<BoxCollider>().size = screenDimensions;
         GetComponent<BoxCollider>().center = new Vector2(Mathf.Abs(screenLeft.x - bottomLeft.x) / 2, -(screenTop.y - topRight.y) / 2);
@@ -87,7 +87,7 @@ public class GridRenderer : MonoBehaviour
 
             if (i % 5 == 0)
             {
-                //lineRenderer.SetColors(new Color(0.2f, 0.2f, 0.2f, 0.8f), new Color(0.2f, 0.2f, 0.2f, 0.8f));
+                lineRenderer.SetColors(new Color(0.75f, 0.75f, 0.75f, 1f), new Color(0.75f, 0.75f, 0.75f, 1f));
                 lineRenderer.SetWidth(thickness * thickLineMultiplier, thickness * thickLineMultiplier);
             }
             gridLineList.Add(go);
@@ -106,7 +106,7 @@ public class GridRenderer : MonoBehaviour
 
             if (j % 5 == 0)
             {
-                //lineRenderer.SetColors(new Color(0.2f, 0.2f, 0.2f, 0.8f), new Color(0.2f, 0.2f, 0.2f, 0.8f));
+                lineRenderer.SetColors(new Color(0.75f, 0.75f, 0.75f, 1f), new Color(0.75f, 0.75f, 0.75f, 1f));
                 lineRenderer.SetWidth(thickness * thickLineMultiplier, thickness * thickLineMultiplier);
             }
             gridLineList.Add(go);
