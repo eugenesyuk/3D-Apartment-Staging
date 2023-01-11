@@ -93,7 +93,7 @@ public class WallGenerator : MonoBehaviour
         {
             GameObject wall_object = new GameObject();
             wall_object.layer = 10;
-            wall_object.name = "Wall " + i;
+            wall_object.name = "Line " + i;
             wall_object.transform.parent = _3DContainer.transform;
             walls[i] = wall_object;
             WallFunctions wall_script = wall_object.AddComponent<WallFunctions>();
@@ -299,7 +299,7 @@ public class WallGenerator : MonoBehaviour
         {
             if (hit.name.ToLower().Contains("wall"))
             {
-                print("Hit with Wall " + hit.gameObject);
+                print("Hit with Line " + hit.gameObject);
                 return hit.gameObject;
             }
         }
@@ -309,7 +309,7 @@ public class WallGenerator : MonoBehaviour
             //print ("Point pair array " + point_pairs_array [i][0] + " " + point_pairs_array[i][1]);
             //if (contains(point_pairs_array[i], startNode) && contains(point_pairs_array[i], endNode))
             print("Absolute position is " + h.Position);
-            print("Wall Renderer is " + walls[i].GetComponent<Renderer>().bounds);
+            print("Line Renderer is " + walls[i].GetComponent<Renderer>().bounds);
 
             //PUNEET -> Changed your method of checking for window. Instead, just check if the wall overlaps that position.
             //Slight issue and doesn't work in some odd cases when the 2D position is a little off and not exactly centered. 
@@ -325,7 +325,7 @@ public class WallGenerator : MonoBehaviour
     private void holeAddOrUpdate(GameObject wall, Hole hole)
     {
         print("Inside add or update and wall is " + wall + " hole is " + hole);
-        print("Wall holes dictionairy is size" + wall_holes.Count);
+        print("Line holes dictionairy is size" + wall_holes.Count);
         if (wall_holes.ContainsKey(wall))
         {
             List<Hole> l = wall_holes[wall];

@@ -3,17 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class WallManager : MonoBehaviour
+public class DrawingManager : MonoBehaviour
 {
 
-    public GameObject wallSprite;
+    public GameObject lineSprite;
     public GameObject nodeSprite;
-    public Transform wallContainer, nodeContainer, houseObjectcontainer, windowContainer;
-    GameObject newWall;
+    public Transform lineContainer, nodeContainer, houseObjectcontainer, windowContainer;
+    GameObject newLine;
     GameObject initialNode, currentNode;
 
     public List<GameObject> nodeList = new();
-    public List<GameObject> wallList = new();
+    public List<GameObject> lineList = new();
     public List<GameObject> windowList = new();
     public List<GameObject> houseObjectList = new();
 
@@ -49,16 +49,16 @@ public class WallManager : MonoBehaviour
                     else
                     {
                         didDraw = true;
-                        float newXpos = wallList.Last().transform.position.x + wallList.Last().transform.localScale.x * Mathf.Cos(_xRotation * Mathf.PI / 180f);
-                        float newYpos = wallList.Last().transform.position.y + wallList.Last().transform.localScale.x * Mathf.Sin(_xRotation * Mathf.PI / 180f);
+                        float newXpos = lineList.Last().transform.position.x + lineList.Last().transform.localScale.x * Mathf.Cos(_xRotation * Mathf.PI / 180f);
+                        float newYpos = lineList.Last().transform.position.y + lineList.Last().transform.localScale.x * Mathf.Sin(_xRotation * Mathf.PI / 180f);
 
                         newXpos = Mathf.Round(newXpos * 100) / 100f;
                         newYpos = Mathf.Round(newYpos * 100) / 100f;
 
                         Vector3 newPos = new(newXpos, newYpos, 0);
                         _initialPos = newPos;
-                        setPreviousWallEndNode();
-                        handleOverlap(wallList.Last());
+                        setPreviousLineEndNode();
+                        handleOverlap(lineList.Last());
                     }
 
                     instantiateWall(_initialPos);
@@ -66,7 +66,7 @@ public class WallManager : MonoBehaviour
                 }
                 else
                 {
-                    removeDrawingWall();
+                    removeDrawingLine();
                 }
             }
         };
@@ -75,63 +75,63 @@ public class WallManager : MonoBehaviour
         TouchKit.addGestureRecognizer(tapRecognizer);
     }
 
-    void handleOverlap(GameObject wall)
+    void handleOverlap(GameObject line)
     {
-        int count = wallList.Count - 1;
+        int count = lineList.Count - 1;
 
-        Dictionary<GameObject, Vector> wallsToSplit = new();
+        Dictionary<GameObject, Vector> linesToSplit = new();
 
         for (int i = 0; i < count; i++)
         {
-            if (wall.GetComponent<Wall>().startNode != wallList[i].GetComponent<Wall>().endNode)
+            if (line.GetComponent<Line>().startNode != lineList[i].GetComponent<Line>().endNode)
             {
                 Vector intersectionPoint = new();
-                Vector p1 = new(wall.GetComponent<Wall>().startNode.transform.position.x, wall.GetComponent<Wall>().startNode.transform.position.y);
-                Vector p2 = new(wall.GetComponent<Wall>().endNode.transform.position.x, wall.GetComponent<Wall>().endNode.transform.position.y);
+                Vector p1 = new(line.GetComponent<Line>().startNode.transform.position.x, line.GetComponent<Line>().startNode.transform.position.y);
+                Vector p2 = new(line.GetComponent<Line>().endNode.transform.position.x, line.GetComponent<Line>().endNode.transform.position.y);
 
-                Vector q1 = new(wallList[i].GetComponent<Wall>().startNode.transform.position.x, wallList[i].GetComponent<Wall>().startNode.transform.position.y);
-                Vector q2 = new(wallList[i].GetComponent<Wall>().endNode.transform.position.x, wallList[i].GetComponent<Wall>().endNode.transform.position.y);
+                Vector q1 = new(lineList[i].GetComponent<Line>().startNode.transform.position.x, lineList[i].GetComponent<Line>().startNode.transform.position.y);
+                Vector q2 = new(lineList[i].GetComponent<Line>().endNode.transform.position.x, lineList[i].GetComponent<Line>().endNode.transform.position.y);
                 if (LineSegementsIntersect(p1, p2, q1, q2, out intersectionPoint, true))
                 {
-                    print("Wall " + wall.name + " Overlaps with " + wallList[i] + " at point " + intersectionPoint.X + " " + intersectionPoint.Y);
+                    print("Line " + line.name + " Overlaps with " + lineList[i] + " at point " + intersectionPoint.X + " " + intersectionPoint.Y);
                     if (!double.IsNaN(intersectionPoint.X) || !double.IsNaN(intersectionPoint.Y))
                     {
-                        wallsToSplit.Add(wallList[i], intersectionPoint);
+                        linesToSplit.Add(lineList[i], intersectionPoint);
                     }
                 }
             }
         }
 
-        for (int index = 0; index < wallsToSplit.Count; index++)
+        for (int index = 0; index < linesToSplit.Count; index++)
         {
-            var item = wallsToSplit.ElementAt(index);
-            print("splitting wall " + item.Key + " At position " + (float)item.Value.X + " " + (float)item.Value.Y);
-            splitWall(item.Key, new Vector3((float)item.Value.X, (float)item.Value.Y, 0));
+            var item = linesToSplit.ElementAt(index);
+            print("splitting line " + item.Key + " At position " + (float)item.Value.X + " " + (float)item.Value.Y);
+            splitLine(item.Key, new Vector3((float)item.Value.X, (float)item.Value.Y, 0));
         }
     }
 
-    void splitWall(GameObject wall, Vector3 position)
+    void splitLine(GameObject line, Vector3 position)
     {
         GameObject newNode = instantiateIntersectionNode(position);
-        GameObject startNode = wall.GetComponent<Wall>().startNode;
-        GameObject endNode = wall.GetComponent<Wall>().endNode;
+        GameObject startNode = line.GetComponent<Line>().startNode;
+        GameObject endNode = line.GetComponent<Line>().endNode;
 
         /*startNode.GetComponent<Node>().adjacentNodes.Remove(endNode);
         startNode.GetComponent<Node>().adjacentNodes.Add(newNode);
         newNode.GetComponent<Node>().adjacentNodes.Add(endNode);*/
 
-        Vector3 scale = wall.transform.localScale;
+        Vector3 scale = line.transform.localScale;
         int multiplier = 1;
         if (scale.x < 0)
         {
             multiplier = -1;
         }
 
-        instantiateWall(newNode, endNode, wall.transform.rotation, multiplier);
+        instantiateLine(newNode, endNode, line.transform.rotation, multiplier);
 
-        wall.GetComponent<Wall>().endNode = newNode;
+        line.GetComponent<Line>().endNode = newNode;
 
-        wall.transform.localScale = new Vector3(multiplier * Vector3.Distance(startNode.transform.position, wall.GetComponent<Wall>().endNode.transform.position), scale.y, scale.z);
+        line.transform.localScale = new Vector3(multiplier * Vector3.Distance(startNode.transform.position, line.GetComponent<Line>().endNode.transform.position), scale.y, scale.z);
 
     }
 
@@ -139,12 +139,12 @@ public class WallManager : MonoBehaviour
 
     void instantiateWall(Vector3 position)
     {
-        newWall = GameObject.Instantiate(wallSprite);
-        newWall.name = "Wall" + wallList.Count();
-        newWall.transform.parent = wallContainer;
-        newWall.transform.position = _initialPos;
-        //newWall.GetComponent<BoxCollider>().enabled = false;
-        Wall w = newWall.GetComponent<Wall>();
+        newLine = GameObject.Instantiate(lineSprite);
+        newLine.name = "Line" + lineList.Count();
+        newLine.transform.parent = lineContainer;
+        newLine.transform.position = _initialPos;
+        //newLine.GetComponent<BoxCollider>().enabled = false;
+        Line w = newLine.GetComponent<Line>();
         if (currentNode == null)
         {
             w.startNode = initialNode;
@@ -153,22 +153,22 @@ public class WallManager : MonoBehaviour
         {
             w.startNode = currentNode;
         }
-        wallList.Add(newWall);
+        lineList.Add(newLine);
     }
 
-    void instantiateWall(GameObject startNode, GameObject endNode, Quaternion rotation, int multiplier)
+    void instantiateLine(GameObject startNode, GameObject endNode, Quaternion rotation, int multiplier)
     {
-        newWall = GameObject.Instantiate(wallSprite);
-        newWall.name = "Wall" + wallList.Count();
-        newWall.transform.parent = wallContainer;
-        newWall.transform.position = startNode.transform.position;
+        newLine = GameObject.Instantiate(lineSprite);
+        newLine.name = "Line" + lineList.Count();
+        newLine.transform.parent = lineContainer;
+        newLine.transform.position = startNode.transform.position;
 
-        newWall.transform.localScale = new Vector3(multiplier * Vector3.Distance(startNode.transform.position, endNode.transform.position), 0.2f, 1);
-        newWall.transform.rotation = rotation;
-        Wall w = newWall.GetComponent<Wall>();
+        newLine.transform.localScale = new Vector3(multiplier * Vector3.Distance(startNode.transform.position, endNode.transform.position), 0.2f, 1);
+        newLine.transform.rotation = rotation;
+        Line w = newLine.GetComponent<Line>();
         w.startNode = startNode;
         w.endNode = endNode;
-        wallList.Add(newWall);
+        lineList.Add(newLine);
     }
 
     GameObject instantiateNode(Vector3 position)
@@ -229,10 +229,10 @@ public class WallManager : MonoBehaviour
     }
 
 
-    void setPreviousWallEndNode()
+    void setPreviousLineEndNode()
     {
-        wallList.Last().GetComponent<Wall>().endNode = instantiateNode(_initialPos);
-        //wallList.Last().GetComponent<BoxCollider>().enabled = true;
+        lineList.Last().GetComponent<Line>().endNode = instantiateNode(_initialPos);
+        //lineList.Last().GetComponent<BoxCollider>().enabled = true;
     }
 
     // Update is called once per frame
@@ -241,7 +241,7 @@ public class WallManager : MonoBehaviour
 
         detectRightClick();
 
-        if (newWall != null && isDrawing)
+        if (newLine != null && isDrawing)
         {
             _currentPos = GetCurrentMousePosition(Input.mousePosition).GetValueOrDefault();
             if (gameObject.GetComponent<BoxCollider>().bounds.Contains(transform.TransformPoint(_currentPos)))
@@ -255,20 +255,20 @@ public class WallManager : MonoBehaviour
                     newX *= -1;
                 }
 
-                //Need to give new value of rotation for the wall script
+                //Need to give new value of rotation for the line script
                 Quaternion newRotation = Quaternion.LookRotation(_initialPos - _currentPos, Vector3.up);
                 newRotation.x = 0.0f;
                 newRotation.y = 0.0f;
                 _xRotation = Mathf.Round(newRotation.eulerAngles.z / 15) * 15;
                 newRotation = Quaternion.Euler(newRotation.x, newRotation.y, _xRotation);
 
-                //wallList.Last().transform.rotation = newRotation;
-                newWall.transform.rotation = newRotation;
+                //lineList.Last().transform.rotation = newRotation;
+                newLine.transform.rotation = newRotation;
 
-                //wallList.Last().transform.localScale = new Vector3(newX, wallList.Last().transform.localScale.y, wallList.Last().transform.localScale.z);
+                //lineList.Last().transform.localScale = new Vector3(newX, lineList.Last().transform.localScale.y, lineList.Last().transform.localScale.z);
                 //newX = Mathf.Round(newX * 0.5f) / 0.5f;
-                Vector3 newScale = new(newX, newWall.transform.localScale.y, newWall.transform.localScale.z);
-                newWall.transform.localScale = newScale;
+                Vector3 newScale = new(newX, newLine.transform.localScale.y, newLine.transform.localScale.z);
+                newLine.transform.localScale = newScale;
             }
         }
     }
@@ -277,16 +277,16 @@ public class WallManager : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(1))
         {
-            removeDrawingWall();
+            removeDrawingLine();
         }
     }
 
-    private void removeDrawingWall()
+    private void removeDrawingLine()
     {
         if (currentNode != null)
         {
-            wallList.Remove(newWall);
-            GameObject.DestroyImmediate(newWall);
+            lineList.Remove(newLine);
+            GameObject.DestroyImmediate(newLine);
 
             if (currentNode.GetComponent<Node>().adjacentNodes.Count == 0 && !didDraw)
             {
@@ -333,26 +333,26 @@ public class WallManager : MonoBehaviour
         {
             RaycastHit[] hitList = Physics.RaycastAll(transform.TransformPoint(windowList[i].transform.position), Vector3.forward);
 
-            int correctWallIndex = -1;
+            int correctLineIndex = -1;
 
             for (int j = 0; j < hitList.Length; j++)
             {
                 print("The ray hit" + hitList[j].transform.name);
-                if (hitList[j].transform.name.Contains("Wall"))
+                if (hitList[j].transform.name.Contains("Line"))
                 {
                     if (Mathf.Approximately(hitList[j].transform.rotation.eulerAngles.z, windowList[i].transform.rotation.eulerAngles.z))
                     {
-                        correctWallIndex = j;
+                        correctLineIndex = j;
                     }
                     break;
                 }
             }
 
             WallAttachableObject w = windowList[i].GetComponent<WallAttachableObject>();
-            if (correctWallIndex < hitList.Length && correctWallIndex != -1)
+            if (correctLineIndex < hitList.Length && correctLineIndex != -1)
             {
-                w.startNode = hitList[correctWallIndex].transform.GetComponent<Wall>().startNode;
-                w.endNode = hitList[correctWallIndex].transform.GetComponent<Wall>().endNode;
+                w.startNode = hitList[correctLineIndex].transform.GetComponent<Line>().startNode;
+                w.endNode = hitList[correctLineIndex].transform.GetComponent<Line>().endNode;
             }
         }
         return windowList;
@@ -363,8 +363,8 @@ public class WallManager : MonoBehaviour
         nodeList.Clear();
         DestroyChildren(nodeContainer);
 
-        wallList.Clear();
-        DestroyChildren(wallContainer);
+        lineList.Clear();
+        DestroyChildren(lineContainer);
 
         windowList.Clear();
         DestroyChildren(windowContainer); 

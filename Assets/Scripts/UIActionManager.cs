@@ -8,7 +8,7 @@ public class UIActionManager : MonoBehaviour
 {
     public GameObject _3DRoot, _2DRoot, viewerCamera, isoCamera;
     public Transform _3DCanvas, _2DCanvas;
-    public WallManager wallManager;
+    public DrawingManager wallManager;
     public WallGenerator wallGenerator;
     public Button clearButton, view3DButton;
 
@@ -22,7 +22,7 @@ public class UIActionManager : MonoBehaviour
         //    viewerCamera = _3DRoot.transform.Find("Viewer").gameObject;
         //    isoCamera = _3DRoot.transform.Find("Isocam").gameObject;
 
-        //    wallManager = GameObject.Find("2D Core").GetComponent<WallManager>();
+        //    wallManager = GameObject.Find("2D Core").GetComponent<DrawingManager>();
 
         //    _3DCanvas = transform.Find("3D Canvas");
         //    _2DCanvas = transform.Find("2D Canvas");

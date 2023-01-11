@@ -8,7 +8,7 @@ public class HouseObject : MonoBehaviour {
     public bool isWallAttachable = false;
     public Color placable, notPlacable;
     public LayerMask layerMask;
-    protected WallManager wallManager;
+    protected DrawingManager wallManager;
     public string category;
 
     void OnEnable()
@@ -18,8 +18,8 @@ public class HouseObject : MonoBehaviour {
 
     // Use this for initialization
     protected virtual void Start () {
-        wallManager = GameObject.Find("2DManager").GetComponent<WallManager>();
-        print("Wall manager is " + wallManager);
+        wallManager = GameObject.Find("2DManager").GetComponent<DrawingManager>();
+        print("Line manager is " + wallManager);
 	}
 	
 	// Update is called once per frame

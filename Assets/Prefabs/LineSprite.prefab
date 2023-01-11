@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 6505564}
   - component: {fileID: 11428644}
   m_Layer: 0
-  m_Name: WallSprite
+  m_Name: LineSprite
   m_TagString: Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

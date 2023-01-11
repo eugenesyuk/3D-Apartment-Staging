@@ -47,7 +47,7 @@ public class WallAttachableObject : HouseObject
             {
                 for (int i = 0; i < hitList.Length; i++)
                 {
-                    if (hitList[i].transform.name.Contains("Wall"))
+                    if (hitList[i].transform.name.Contains("Line"))
                     {
                         adjustPosition(hitList[i].transform);
                         break;
@@ -70,7 +70,7 @@ public class WallAttachableObject : HouseObject
         {
             for (int i = 0; i < hitList.Length; i++)
             {
-                if (!hitList[i].transform.name.Contains("Wall"))
+                if (!hitList[i].transform.name.Contains("Line"))
                 {
                     Destroy(gameObject);
                 }
@@ -89,14 +89,14 @@ public class WallAttachableObject : HouseObject
 
     public void adjustPosition(Transform overlap)
     {
-        Vector p1 = new Vector(overlap.GetComponent<Wall>().startNode.transform.position.x, overlap.GetComponent<Wall>().startNode.transform.position.y);
-        Vector p2 = new Vector(overlap.GetComponent<Wall>().endNode.transform.position.x, overlap.GetComponent<Wall>().endNode.transform.position.y);
+        Vector p1 = new Vector(overlap.GetComponent<Line>().startNode.transform.position.x, overlap.GetComponent<Line>().startNode.transform.position.y);
+        Vector p2 = new Vector(overlap.GetComponent<Line>().endNode.transform.position.x, overlap.GetComponent<Line>().endNode.transform.position.y);
 
         Vector q1 = new Vector(-20, transform.position.y);
         Vector q2 = new Vector(20, transform.position.y);
 
-        Transform startNode = overlap.GetComponent<Wall>().startNode.transform;
-        Transform endNode = overlap.GetComponent<Wall>().endNode.transform;
+        Transform startNode = overlap.GetComponent<Line>().startNode.transform;
+        Transform endNode = overlap.GetComponent<Line>().endNode.transform;
 
         if (overlap.transform.rotation.eulerAngles.z < 1 && overlap.transform.rotation.eulerAngles.z > -1)
         {
