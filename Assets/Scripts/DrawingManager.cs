@@ -9,6 +9,7 @@ public class DrawingManager : MonoBehaviour
     public GameObject lineSprite;
     public GameObject nodeSprite;
     public Transform lineContainer, nodeContainer, houseObjectcontainer, windowContainer;
+
     GameObject newLine;
     GameObject initialNode, currentNode;
 
@@ -145,6 +146,8 @@ public class DrawingManager : MonoBehaviour
         newLine.transform.position = _initialPos;
         //newLine.GetComponent<BoxCollider>().enabled = false;
         Line w = newLine.GetComponent<Line>();
+        w.name = newLine.name;
+
         if (currentNode == null)
         {
             w.startNode = initialNode;
@@ -153,6 +156,7 @@ public class DrawingManager : MonoBehaviour
         {
             w.startNode = currentNode;
         }
+
         lineList.Add(newLine);
     }
 
@@ -269,6 +273,8 @@ public class DrawingManager : MonoBehaviour
                 //newX = Mathf.Round(newX * 0.5f) / 0.5f;
                 Vector3 newScale = new(newX, newLine.transform.localScale.y, newLine.transform.localScale.z);
                 newLine.transform.localScale = newScale;
+
+                newLine.GetComponent<Line>().RenderLineSizeLabel(_initialPos, _currentPos, lineContainer); 
             }
         }
     }
