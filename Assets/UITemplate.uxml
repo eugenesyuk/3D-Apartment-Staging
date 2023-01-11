@@ -1,0 +1,4 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/styles.uss?fileID=7433441132597879392&amp;guid=c2cae3d27ad8f0449bf59869e8b51425&amp;type=3#styles" />
+    <ui:Button text="Start" display-tooltip-when-elided="true" name="start-button" enable-rich-text="true" class="button" style="white-space: nowrap; justify-content: flex-start; align-items: auto; left: auto; opacity: 1; display: flex; visibility: visible; overflow: visible; top: 10px; width: 104px; height: 33px; -unity-text-align: middle-center; right: 15px; position: absolute;" />
+</ui:UXML>

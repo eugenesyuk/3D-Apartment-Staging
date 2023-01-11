@@ -1,0 +1,12 @@
+.button {
+    -unity-background-image-tint-color: rgba(72, 255, 32, 255);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    background-color: rgba(70, 70, 70, 255);
+}
+
+.button:hover {
+    background-color: rgb(60, 60, 60);
+}
