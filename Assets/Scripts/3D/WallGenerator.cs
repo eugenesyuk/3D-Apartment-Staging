@@ -6,7 +6,7 @@ using Poly2Tri;
 
 public class WallGenerator : MonoBehaviour
 {
-    public float thickness = 0.2f;
+    public float thickness = 0.15f;
     public float scaleRatio = 5f;
 
     private Dictionary<Vector3, List<GameObject>> nodes = new Dictionary<Vector3, List<GameObject>>();

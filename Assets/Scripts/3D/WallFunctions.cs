@@ -8,7 +8,7 @@ using System.Reflection;
 public class WallFunctions : MonoBehaviour
 {
 
-    public float thickness = 0.2f;
+    public float thickness = 0.15f;
     public float height = 2.3f;
     private Vector3 _start_pt;
     private Vector3 _end_pt;
