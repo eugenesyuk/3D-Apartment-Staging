@@ -56,8 +56,8 @@ public class DrawingManager : MonoBehaviour
                         newXpos = Mathf.Round(newXpos * 100) / 100f;
                         newYpos = Mathf.Round(newYpos * 100) / 100f;
 
-                        Vector3 newPos = new(newXpos, newYpos, 0);
-                        _initialPos = newPos;
+                        _initialPos = _currentPos;
+
                         setPreviousLineEndNode();
                         handleOverlap(lineList.Last());
                     }
@@ -248,33 +248,25 @@ public class DrawingManager : MonoBehaviour
         if (newLine != null && isDrawing)
         {
             _currentPos = GetCurrentMousePosition(Input.mousePosition).GetValueOrDefault();
+
             if (gameObject.GetComponent<BoxCollider>().bounds.Contains(transform.TransformPoint(_currentPos)))
             {
-                Vector3 difference = _currentPos - _initialPos;
+                Vector3 direction = _currentPos - _initialPos;
 
-                float newX = difference.magnitude; //The new X scale for the 
+                float newX = direction.magnitude; //The new X scale for the 
 
-                if (difference.x < 0)
-                {
-                    newX *= -1;
-                }
+                // Need to give new value of rotation for the line script
+                float angle = ((Mathf.Atan2(direction.x, direction.y) * Mathf.Rad2Deg) - 90) * -1;
+                Quaternion newRotation = Quaternion.AngleAxis(angle, Vector3.forward);
 
-                //Need to give new value of rotation for the line script
-                Quaternion newRotation = Quaternion.LookRotation(_initialPos - _currentPos, Vector3.up);
-                newRotation.x = 0.0f;
-                newRotation.y = 0.0f;
-                _xRotation = Mathf.Round(newRotation.eulerAngles.z / 15) * 15;
-                newRotation = Quaternion.Euler(newRotation.x, newRotation.y, _xRotation);
-
-                //lineList.Last().transform.rotation = newRotation;
+                //_xRotation = Mathf.Round(newRotation.eulerAngles.z / 5) * 5;
+                //newRotation = Quaternion.Euler(newRotation.x, newRotation.y, _xRotation);
                 newLine.transform.rotation = newRotation;
 
-                //lineList.Last().transform.localScale = new Vector3(newX, lineList.Last().transform.localScale.y, lineList.Last().transform.localScale.z);
-                //newX = Mathf.Round(newX * 0.5f) / 0.5f;
                 Vector3 newScale = new(newX, newLine.transform.localScale.y, newLine.transform.localScale.z);
                 newLine.transform.localScale = newScale;
 
-                newLine.GetComponent<Line>().RenderLineSizeLabel(_initialPos, _currentPos, lineContainer); 
+                newLine.GetComponent<Line>().RenderLineSizeLabel(_initialPos, _currentPos, lineContainer);
             }
         }
     }
