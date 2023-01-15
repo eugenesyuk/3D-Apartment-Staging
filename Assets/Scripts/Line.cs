@@ -32,9 +32,9 @@ public class Line : MonoBehaviour
         textMesh.transform.position = Vector3.Lerp(startPoint, endPoint, 0.5f);
         textMesh.color = Color.black;
         textMesh.alignment = TextAlignmentOptions.Center;
-        textMesh.fontSize = 12;
+        textMesh.fontSize = 10;
 
-        textMesh.text = (Vector3.Distance(startPoint, endPoint) / 5).ToString("0.00") + "m";
+        textMesh.text = (Vector3.Distance(startPoint, endPoint) / 5).ToString("0.##") + "m";
     }
 
     private void OnDestroy()
