@@ -14,20 +14,6 @@ public class UIActionManager : MonoBehaviour
 
     private void Awake()
     {
-        //    _3DRoot = GameObject.Find("3D");
-        //    _2DRoot = GameObject.Find("2D");
-
-        //    Debug.Log("awake");
-
-        //    viewerCamera = _3DRoot.transform.Find("Viewer").gameObject;
-        //    isoCamera = _3DRoot.transform.Find("Isocam").gameObject;
-
-        //    wallManager = GameObject.Find("2D Core").GetComponent<DrawingManager>();
-
-        //    _3DCanvas = transform.Find("3D Canvas");
-        //    _2DCanvas = transform.Find("2D Canvas");
-
-        //    wallGenerator = _3DRoot.GetComponent<WallGenerator>();
         clearButton.interactable = false;
         view3DButton.interactable = false;
 
