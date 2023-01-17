@@ -256,11 +256,11 @@ public class WallGenerator : MonoBehaviour
 
             Hole hole = new Hole();
             hole.Position = window.transform.position / scaleRatio;
-            hole.Hole_length = window.GetComponent<WallAttachableObject>().length;
-            hole.Hole_height = window.GetComponent<WallAttachableObject>().height;
-            hole.Hole_elevation = window.GetComponent<WallAttachableObject>().elevation;
-            //Vector3 startNode = swapVectorYZ(window.GetComponent<WallAttachableObject>().startNode.transform.position);
-            //Vector3 endNode = swapVectorYZ(window.GetComponent<WallAttachableObject>().endNode.transform.position);
+            hole.Hole_length = window.GetComponent<LineAttachableObject>().length;
+            hole.Hole_height = window.GetComponent<LineAttachableObject>().height;
+            hole.Hole_elevation = window.GetComponent<LineAttachableObject>().elevation;
+            //Vector3 startNode = swapVectorYZ(window.GetComponent<LineAttachableObject>().startNode.transform.position);
+            //Vector3 endNode = swapVectorYZ(window.GetComponent<LineAttachableObject>().endNode.transform.position);
             GameObject wall = liesOn(hole);
             hole.Position = swapVectorYZ(window.transform.position) / scaleRatio;
 

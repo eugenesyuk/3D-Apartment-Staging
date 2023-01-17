@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class WallAttachableObject : HouseObject
+public class LineAttachableObject : HouseObject
 {
     public GameObject startNode, endNode;
     public float length;

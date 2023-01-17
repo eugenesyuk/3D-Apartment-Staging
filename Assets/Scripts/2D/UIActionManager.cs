@@ -8,7 +8,7 @@ public class UIActionManager : MonoBehaviour
 {
     public GameObject _3DRoot, _2DRoot, viewerCamera, isoCamera;
     public Transform _3DCanvas, _2DCanvas;
-    public DrawingManager wallManager;
+    public FloorplanManager wallManager;
     public WallGenerator wallGenerator;
 
     [SerializeField]

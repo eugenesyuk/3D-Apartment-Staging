@@ -7,7 +7,7 @@ public class HouseObject : MonoBehaviour {
     public bool isPlacable = true;
     public bool isWallAttachable = false;
     public Color placable, notPlacable;
-    protected DrawingManager wallManager;
+    protected FloorplanManager wallManager;
     public string category;
 
     void OnEnable()
@@ -17,7 +17,7 @@ public class HouseObject : MonoBehaviour {
 
     // Use this for initialization
     protected virtual void Start () {
-        wallManager = GameObject.Find("Floorplan Container").GetComponent<DrawingManager>();
+        wallManager = GameObject.Find("Floorplan Container").GetComponent<FloorplanManager>();
         print("Line manager is " + wallManager);
 	}
 	
