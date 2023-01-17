@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class DrawingManager : MonoBehaviour
+public class FloorplanManager : MonoBehaviour
 {
 
     public GameObject lineSprite;
@@ -352,7 +352,7 @@ public class DrawingManager : MonoBehaviour
                 }
             }
 
-            WallAttachableObject w = windowList[i].GetComponent<WallAttachableObject>();
+            LineAttachableObject w = windowList[i].GetComponent<LineAttachableObject>();
             if (correctLineIndex < hitList.Length && correctLineIndex != -1)
             {
                 w.startNode = hitList[correctLineIndex].transform.GetComponent<Line>().startNode;
