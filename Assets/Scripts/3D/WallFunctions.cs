@@ -24,7 +24,7 @@ public class WallFunctions : MonoBehaviour
     private int ovl;
     public float hole_length = 1;
     public float hole_height = 1;
-    public float hole_elevation = 2;
+    public float hole_elevation = 1.5f;
     private Polygon latest_face = null;
     public float tilingfactor = 1;
     public int Ovl

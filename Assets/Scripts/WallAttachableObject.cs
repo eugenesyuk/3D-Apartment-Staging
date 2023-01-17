@@ -7,10 +7,12 @@ public class WallAttachableObject : HouseObject
     public float length;
     public float height;
     public float elevation;
+    private LayerMask layerMask;
 
     // Use this for initialization
     protected override void Start()
     {
+        layerMask = LayerMask.GetMask("Floorplan");
         isWallAttachable = true;
         base.Start();
     }
@@ -20,14 +22,14 @@ public class WallAttachableObject : HouseObject
         base.init(category, name, isWallAttachable);
         if (name.Contains("window"))
         {
-            length = 2f;
-            height = 2f;
-            elevation = 2.5f;
+            length = 1f;
+            height = 1f;
+            elevation = 1.15f;
         }
         else if (name.Contains("door"))
         {
-            length = 2f;
-            height = 4f;
+            length = 1f;
+            height = 1.8f;
             elevation = height * 0.5f + 0.001f;
         }
     }
@@ -43,10 +45,14 @@ public class WallAttachableObject : HouseObject
         if (isWallAttachable)
         {
             RaycastHit[] hitList = Physics.BoxCastAll(GetComponent<Renderer>().bounds.center, GetComponent<Renderer>().bounds.extents * 1.1f, Vector3.forward, transform.rotation, float.PositiveInfinity, layerMask);
+            print(hitList);
+            print(layerMask);
             if (hitList.Length > 0)
             {
                 for (int i = 0; i < hitList.Length; i++)
                 {
+                    print("Hit with object " + hitList[i].transform.name);
+
                     if (hitList[i].transform.name.Contains("Line"))
                     {
                         adjustPosition(hitList[i].transform);

@@ -21,6 +21,7 @@ public class WallGenerator : MonoBehaviour
     public LayerMask layerMask3D;
     public GameObject _3DContainer;
 
+    private int layer3D = 10;
     public void Refresh()
     {
         nodes.Clear();
@@ -92,8 +93,8 @@ public class WallGenerator : MonoBehaviour
         for (int i = 0; i < point_pairs_array.Length; i++)
         {
             GameObject wall_object = new GameObject();
-            wall_object.layer = 10;
-            wall_object.name = "Line " + i;
+            wall_object.layer = layer3D;
+            wall_object.name = "Wall " + i;
             wall_object.transform.parent = _3DContainer.transform;
             walls[i] = wall_object;
             WallFunctions wall_script = wall_object.AddComponent<WallFunctions>();
@@ -215,7 +216,7 @@ public class WallGenerator : MonoBehaviour
             //PUNEET -> Added Mesh Collider to floor
             floor.AddComponent<MeshCollider>();
             floor.GetComponent<MeshCollider>().sharedMesh = floor_m;
-            floor.layer = 10;
+            floor.layer = layer3D;
         }
     }
     private Polygon createPoly(Vector2[] points)
@@ -253,19 +254,19 @@ public class WallGenerator : MonoBehaviour
         foreach (GameObject window in windows)
         {
 
-            Hole h = new Hole();
-            h.Position = window.transform.position;
-            h.Hole_length = window.GetComponent<WallAttachableObject>().length;
-            h.Hole_height = window.GetComponent<WallAttachableObject>().height;
-            h.Hole_elevation = window.GetComponent<WallAttachableObject>().elevation;
+            Hole hole = new Hole();
+            hole.Position = window.transform.position / scaleRatio;
+            hole.Hole_length = window.GetComponent<WallAttachableObject>().length;
+            hole.Hole_height = window.GetComponent<WallAttachableObject>().height;
+            hole.Hole_elevation = window.GetComponent<WallAttachableObject>().elevation;
             //Vector3 startNode = swapVectorYZ(window.GetComponent<WallAttachableObject>().startNode.transform.position);
             //Vector3 endNode = swapVectorYZ(window.GetComponent<WallAttachableObject>().endNode.transform.position);
-            GameObject w = liesOn(h);
-            h.Position = swapVectorYZ(window.transform.position);
+            GameObject wall = liesOn(hole);
+            hole.Position = swapVectorYZ(window.transform.position) / scaleRatio;
 
-            if (w != null)
+            if (wall != null)
             {
-                holeAddOrUpdate(w, h);
+                holeAddOrUpdate(wall, hole);
             }
             else
                 Debug.Log("Not Found");
@@ -286,17 +287,22 @@ public class WallGenerator : MonoBehaviour
                 return true;
         return false;
     }
-    private GameObject liesOn(Hole h)
+    private GameObject liesOn(Hole hole)
     {
-        Vector3 relativePos = new Vector3(h.Position.x, 2.5f, h.Position.y);
-        //RaycastHit[] hitList = Physics.BoxCastAll (relativePos, new Vector3 (h.Hole_length / 2, h.Hole_height / 2, thickness), Vector3.down, layerMask3D);
-        //print ("Hit list count is " + hitList.Length);
-        print("Box pos is  " + relativePos + " " + new Vector3(thickness, h.Hole_height / 2, thickness));
+        Vector3 relativePos = new Vector3(hole.Position.x, 1.5f, hole.Position.y);
+        //Vector3 relativePos = GameObject.Find("Wall 0").transform.position;
 
-        Collider[] colliderList = Physics.OverlapBox(relativePos, new Vector3(thickness, h.Hole_height / 2, thickness), Quaternion.identity, layerMask3D);
+        //RaycastHit[] hitList = Physics.BoxCastAll (relativePos, new Vector3 (hole.Hole_length / 2, hole.Hole_height / 2, thickness), Vector3.down, layerMask3D);
+        //print ("Hit list count is " + hitList.Length);
+        print("Box pos is  " + relativePos + " " + new Vector3(thickness, hole.Hole_height / 2, thickness));
+
+        Collider[] colliderList = Physics.OverlapBox(relativePos, new Vector3(thickness, hole.Hole_height / 2, thickness), Quaternion.identity, layerMask3D);
         print("Size of collider list " + colliderList.Length);
+
         foreach (Collider hit in colliderList)
         {
+            print(hit.name.ToLower());
+
             if (hit.name.ToLower().Contains("wall"))
             {
                 print("Hit with Line " + hit.gameObject);
@@ -308,7 +314,7 @@ public class WallGenerator : MonoBehaviour
         {
             //print ("Point pair array " + point_pairs_array [i][0] + " " + point_pairs_array[i][1]);
             //if (contains(point_pairs_array[i], startNode) && contains(point_pairs_array[i], endNode))
-            print("Absolute position is " + h.Position);
+            print("Absolute position is " + hole.Position);
             print("Line Renderer is " + walls[i].GetComponent<Renderer>().bounds);
 
             //PUNEET -> Changed your method of checking for window. Instead, just check if the wall overlaps that position.
@@ -662,7 +668,7 @@ public class Hole
     private int hole_end_index;
     private float hole_length = 1;
     private float hole_height = 1;
-    private float hole_elevation = 2;
+    private float hole_elevation = 1;
     private Vector3 position;
     public int Hole_end_index
     {

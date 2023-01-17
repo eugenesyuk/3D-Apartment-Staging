@@ -7,7 +7,6 @@ public class HouseObject : MonoBehaviour {
     public bool isPlacable = true;
     public bool isWallAttachable = false;
     public Color placable, notPlacable;
-    public LayerMask layerMask;
     protected DrawingManager wallManager;
     public string category;
 
@@ -18,7 +17,7 @@ public class HouseObject : MonoBehaviour {
 
     // Use this for initialization
     protected virtual void Start () {
-        wallManager = GameObject.Find("2DManager").GetComponent<DrawingManager>();
+        wallManager = GameObject.Find("Floorplan Container").GetComponent<DrawingManager>();
         print("Line manager is " + wallManager);
 	}
 	
@@ -43,8 +42,8 @@ public class HouseObject : MonoBehaviour {
 
     protected virtual void PlaceObject()
     {
-        background.GetComponent<Renderer>().material.color = Color.white;
-        GetComponent<BoxCollider>().enabled = true;
+        //background.GetComponent<Renderer>().material.color = Color.white;
+        //GetComponent<BoxCollider>().enabled = true;
     }
 
     public virtual void init(string category, string name, bool isWallAttachable)

@@ -24,6 +24,8 @@ public class DrawingManager : MonoBehaviour
                                    // Use this for initialization
     public bool didDraw = false;
 
+    private int layerFloorplan = 9;
+
     void Start()
     {
         addTapGesture();
@@ -62,7 +64,7 @@ public class DrawingManager : MonoBehaviour
                         handleOverlap(lineList.Last());
                     }
 
-                    instantiateWall(_initialPos);
+                    instantiateLine(_initialPos);
 
                 }
                 else
@@ -138,12 +140,13 @@ public class DrawingManager : MonoBehaviour
 
 
 
-    void instantiateWall(Vector3 position)
+    void instantiateLine(Vector3 position)
     {
         newLine = GameObject.Instantiate(lineSprite);
         newLine.name = "Line" + lineList.Count();
         newLine.transform.parent = lineContainer;
         newLine.transform.position = _initialPos;
+        newLine.layer = layerFloorplan;
         //newLine.GetComponent<BoxCollider>().enabled = false;
         Line w = newLine.GetComponent<Line>();
         w.name = newLine.name;
@@ -169,6 +172,7 @@ public class DrawingManager : MonoBehaviour
 
         newLine.transform.localScale = new Vector3(multiplier * Vector3.Distance(startNode.transform.position, endNode.transform.position), 0.2f, 1);
         newLine.transform.rotation = rotation;
+        newLine.layer = layerFloorplan;
         Line w = newLine.GetComponent<Line>();
         w.startNode = startNode;
         w.endNode = endNode;
@@ -184,6 +188,7 @@ public class DrawingManager : MonoBehaviour
             newNode.transform.position = position;
             newNode.transform.parent = nodeContainer;
             newNode.name = "Node " + nodeList.Count();
+            newNode.layer = layerFloorplan;
             nodeList.Add(newNode);
         }
         if (!didDraw)
@@ -210,6 +215,7 @@ public class DrawingManager : MonoBehaviour
             newNode.transform.position = position;
             newNode.transform.parent = nodeContainer;
             newNode.name = "Node " + nodeList.Count();
+            newNode.layer = layerFloorplan;
 
             nodeList.Add(newNode);
         }

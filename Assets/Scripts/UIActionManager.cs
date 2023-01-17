@@ -10,6 +10,8 @@ public class UIActionManager : MonoBehaviour
     public Transform _3DCanvas, _2DCanvas;
     public DrawingManager wallManager;
     public WallGenerator wallGenerator;
+
+    [SerializeField]
     public Button clearButton, view3DButton;
 
     private void Awake()
