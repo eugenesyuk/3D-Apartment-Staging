@@ -146,7 +146,7 @@ public class WallGenerator : MonoBehaviour
             {
                 for (int j = 0; j < coincidentWalls.Length; j++)
                 {
-                    //Debug.Log(coincidentWalls[j].name + " : " + coincidentWalls[j].GetComponent<WallFunctions>().Angle + ", " + coincidentWalls[(j + 1) % coincidentWalls.Length].name + " : " + coincidentWalls[(j + 1) % coincidentWalls.Length].GetComponent<WallFunctions>().Angle);
+                    //Debug.Log(coincidentWalls[j].name + " : " + coincidentWalls[j].GetComponent<WallFunctions>().Angle + ", " + coincidentWalls[(j + 1) % coincidentWalls.Width].name + " : " + coincidentWalls[(j + 1) % coincidentWalls.Width].GetComponent<WallFunctions>().Angle);
                     _alternator = !_alternator;
                     AdjustShape(coincidentWalls[j], coincidentWalls[(j + 1) % coincidentWalls.Length], nodePoints[i]);
                 }
@@ -265,9 +265,9 @@ public class WallGenerator : MonoBehaviour
             Hole hole = new()
             {
                 Position = window.transform.position / _scaleFactor,
-                HoleLength = window.GetComponent<LineAttachableObject>().length,
-                HoleHeight = window.GetComponent<LineAttachableObject>().height,
-                HoleElevation = window.GetComponent<LineAttachableObject>().elevation
+                HoleLength = window.GetComponent<LineAttachableObject>().Width,
+                HoleHeight = window.GetComponent<LineAttachableObject>().Height,
+                HoleElevation = window.GetComponent<LineAttachableObject>().Elevation
             };
             //Vector3 startNode = SwapVectorYZ(window.GetComponent<LineAttachableObject>().startNode.transform.position);
             //Vector3 endNode = SwapVectorYZ(window.GetComponent<LineAttachableObject>().endNode.transform.position);

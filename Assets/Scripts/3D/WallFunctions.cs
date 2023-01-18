@@ -14,9 +14,9 @@ public class WallFunctions : MonoBehaviour
     private int _holeStartIndex = 4;
     private int _holeEndIndex = 8;
 
-    public float _holeLength = 1;
-    public float _holeHeight = 1;
-    public float _holeElevation = 1.5f;
+    private float _holeLength;
+    private float _holeHeight;
+    private float _holeElevation;
 
     private Vector3 _startPoint;
     private Vector3 _endPoint;

@@ -4,9 +4,11 @@ using System.Collections;
 public class LineAttachableObject : HouseObject
 {
     public GameObject startNode, endNode;
-    public float length;
-    public float height;
-    public float elevation;
+
+    public float Width;
+    public float Height;
+    public float Elevation;
+
     private LayerMask layerMask;
 
     // Use this for initialization
@@ -23,15 +25,16 @@ public class LineAttachableObject : HouseObject
 
         if (name.Contains("window"))
         {
-            length = 1f;
-            height = 1f;
-            elevation = 1.15f;
+            Width = Globals.Window.Width;
+            Height = Globals.Window.Height;
+            Elevation = Globals.WallParams.Height / 2;
         }
+
         else if (name.Contains("door"))
         {
-            length = 1f;
-            height = 1.8f;
-            elevation = height * 0.5f + 0.001f;
+            Width = Globals.Door.Width;
+            Height = Globals.Door.Height;
+            Elevation = Height * 0.5f + 0.001f;
         }
     }
 

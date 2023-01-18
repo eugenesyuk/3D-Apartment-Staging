@@ -322,11 +322,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 683465877f287a448a1b7f5b76df2ed5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  thickness: 0.15
-  layerMask3D:
+  Thickness: 0.15
+  LayerMask3D:
     serializedVersion: 2
     m_Bits: 1024
-  _3DContainer: {fileID: 98036674}
+  Container3D: {fileID: 98036674}
 --- !u!1 &98036674
 GameObject:
   m_ObjectHideFlags: 0
@@ -784,6 +784,7 @@ MonoBehaviour:
   houseObject: {fileID: 165228, guid: 32c8a371803c90b42b36723c721dad69, type: 3}
   attachableHouseObject: {fileID: 137618, guid: 8673d1bf454069a479d0b0a253e4bd7c,
     type: 3}
+  _isDragging: 0
 --- !u!1 &428705747
 GameObject:
   m_ObjectHideFlags: 0
@@ -1153,6 +1154,7 @@ MonoBehaviour:
   houseObject: {fileID: 165228, guid: 32c8a371803c90b42b36723c721dad69, type: 3}
   attachableHouseObject: {fileID: 137618, guid: 8673d1bf454069a479d0b0a253e4bd7c,
     type: 3}
+  _isDragging: 0
 --- !u!1 &586484474
 GameObject:
   m_ObjectHideFlags: 0
@@ -1742,7 +1744,7 @@ CapsuleCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   m_Radius: 0.4
-  m_Height: 1.75
+  m_Height: 2.5
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &901418998
