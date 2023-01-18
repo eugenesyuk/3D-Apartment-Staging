@@ -411,15 +411,4 @@ public class WallFunctions : MonoBehaviour
 
         m.uv = uvs;
     }
-    // Use this for initialization
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
 }
