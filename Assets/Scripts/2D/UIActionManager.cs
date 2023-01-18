@@ -39,9 +39,9 @@ public class UIActionManager : MonoBehaviour
 
     public void Clicked3DView()
     {
-        List<GameObject> nodeList = wallManager.exportNodes();
-        List<GameObject> windowList = wallManager.exportWindows();
-        List<GameObject> objectList = wallManager.exportObjects();
+        List<GameObject> nodeList = wallManager.ExportNodes();
+        List<GameObject> windowList = wallManager.ExportWindows();
+        List<GameObject> objectList = wallManager.ExportObjects();
 
         _2DRoot.SetActive(false);
         _3DRoot.SetActive(true);

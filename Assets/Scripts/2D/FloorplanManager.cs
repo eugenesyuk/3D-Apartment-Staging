@@ -19,19 +19,20 @@ public class FloorplanManager : MonoBehaviour
     public List<GameObject> houseObjectList = new();
 
     private Vector3 _initialPos, _currentPos;
-    private float _xRotation;
+    
     public bool isDrawing = false; //This is used to determine whether the user has stopped drawing (right click) and perform necessary action
                                    // Use this for initialization
     public bool didDraw = false;
 
-    private int layerFloorplan = 9;
+    private readonly float _xRotation;
+    private readonly int layerFloorplan = Globals.Layers.Floorplan;
 
     void Start()
     {
-        addTapGesture();
+        AddTapGesture();
     }
 
-    void addTapGesture()
+    void AddTapGesture()
     {
         TKTapRecognizer tapRecognizer = new();
 
@@ -47,7 +48,7 @@ public class FloorplanManager : MonoBehaviour
                         didDraw = false;
                         isDrawing = true;
                         _initialPos = Utils.GetCurrentMousePosition(r.startTouchLocation()).GetValueOrDefault();
-                        instantiateNode(_initialPos);
+                        InstantiateNode(_initialPos);
                     }
                     else
                     {
@@ -60,16 +61,16 @@ public class FloorplanManager : MonoBehaviour
 
                         _initialPos = _currentPos;
 
-                        setPreviousLineEndNode();
-                        handleOverlap(lineList.Last());
+                        SetPreviousLineEndNode();
+                        HandleOverlap(lineList.Last());
                     }
 
-                    instantiateLine(_initialPos);
+                    InstantiateLine(_initialPos);
 
                 }
                 else
                 {
-                    removeDrawingLine();
+                    RemoveDrawingLine();
                 }
             }
         };
@@ -78,7 +79,7 @@ public class FloorplanManager : MonoBehaviour
         TouchKit.addGestureRecognizer(tapRecognizer);
     }
 
-    void handleOverlap(GameObject line)
+    void HandleOverlap(GameObject line)
     {
         int count = lineList.Count - 1;
 
@@ -88,13 +89,14 @@ public class FloorplanManager : MonoBehaviour
         {
             if (line.GetComponent<Line>().startNode != lineList[i].GetComponent<Line>().endNode)
             {
-                Vector intersectionPoint = new();
+               
                 Vector p1 = new(line.GetComponent<Line>().startNode.transform.position.x, line.GetComponent<Line>().startNode.transform.position.y);
                 Vector p2 = new(line.GetComponent<Line>().endNode.transform.position.x, line.GetComponent<Line>().endNode.transform.position.y);
 
                 Vector q1 = new(lineList[i].GetComponent<Line>().startNode.transform.position.x, lineList[i].GetComponent<Line>().startNode.transform.position.y);
                 Vector q2 = new(lineList[i].GetComponent<Line>().endNode.transform.position.x, lineList[i].GetComponent<Line>().endNode.transform.position.y);
-                if (LineSegementsIntersect(p1, p2, q1, q2, out intersectionPoint, true))
+
+                if (LineSegementsIntersect(p1, p2, q1, q2, out Vector intersectionPoint, true))
                 {
                     print("Line " + line.name + " Overlaps with " + lineList[i] + " at point " + intersectionPoint.X + " " + intersectionPoint.Y);
                     if (!double.IsNaN(intersectionPoint.X) || !double.IsNaN(intersectionPoint.Y))
@@ -109,13 +111,13 @@ public class FloorplanManager : MonoBehaviour
         {
             var item = linesToSplit.ElementAt(index);
             print("splitting line " + item.Key + " At position " + (float)item.Value.X + " " + (float)item.Value.Y);
-            splitLine(item.Key, new Vector3((float)item.Value.X, (float)item.Value.Y, 0));
+            SplitLine(item.Key, new Vector3((float)item.Value.X, (float)item.Value.Y, 0));
         }
     }
 
-    void splitLine(GameObject line, Vector3 position)
+    void SplitLine(GameObject line, Vector3 position)
     {
-        GameObject newNode = instantiateIntersectionNode(position);
+        GameObject newNode = InstantiateIntersectionNode(position);
         GameObject startNode = line.GetComponent<Line>().startNode;
         GameObject endNode = line.GetComponent<Line>().endNode;
 
@@ -130,7 +132,7 @@ public class FloorplanManager : MonoBehaviour
             multiplier = -1;
         }
 
-        instantiateLine(newNode, endNode, line.transform.rotation, multiplier);
+        InstantiateLine(newNode, endNode, line.transform.rotation, multiplier);
 
         line.GetComponent<Line>().endNode = newNode;
 
@@ -140,14 +142,14 @@ public class FloorplanManager : MonoBehaviour
 
 
 
-    void instantiateLine(Vector3 position)
+    void InstantiateLine(Vector3 position)
     {
         newLine = GameObject.Instantiate(lineSprite);
         newLine.name = "Line" + lineList.Count();
         newLine.transform.parent = lineContainer;
-        newLine.transform.position = _initialPos;
+        newLine.transform.position = position;
         newLine.layer = layerFloorplan;
-        //newLine.GetComponent<BoxCollider>().enabled = false;
+
         Line w = newLine.GetComponent<Line>();
         w.name = newLine.name;
 
@@ -163,7 +165,7 @@ public class FloorplanManager : MonoBehaviour
         lineList.Add(newLine);
     }
 
-    void instantiateLine(GameObject startNode, GameObject endNode, Quaternion rotation, int multiplier)
+    void InstantiateLine(GameObject startNode, GameObject endNode, Quaternion rotation, int multiplier)
     {
         newLine = GameObject.Instantiate(lineSprite);
         newLine.name = "Line" + lineList.Count();
@@ -179,7 +181,7 @@ public class FloorplanManager : MonoBehaviour
         lineList.Add(newLine);
     }
 
-    GameObject instantiateNode(Vector3 position)
+    GameObject InstantiateNode(Vector3 position)
     {
         GameObject newNode = NormalizeNodeAtPoint(position);
         if (newNode == null)
@@ -206,7 +208,7 @@ public class FloorplanManager : MonoBehaviour
         return newNode;
     }
 
-    GameObject instantiateIntersectionNode(Vector3 position)
+    GameObject InstantiateIntersectionNode(Vector3 position)
     {
         GameObject newNode = NormalizeNodeAtPoint(position);
         if (newNode == null)
@@ -239,9 +241,9 @@ public class FloorplanManager : MonoBehaviour
     }
 
 
-    void setPreviousLineEndNode()
+    void SetPreviousLineEndNode()
     {
-        lineList.Last().GetComponent<Line>().endNode = instantiateNode(_initialPos);
+        lineList.Last().GetComponent<Line>().endNode = InstantiateNode(_initialPos);
         //lineList.Last().GetComponent<BoxCollider>().enabled = true;
     }
 
@@ -249,7 +251,7 @@ public class FloorplanManager : MonoBehaviour
     void Update()
     {
 
-        detectRightClick();
+        DetectRightClick();
 
         if (newLine != null && isDrawing)
         {
@@ -277,15 +279,15 @@ public class FloorplanManager : MonoBehaviour
         }
     }
 
-    private void detectRightClick()
+    private void DetectRightClick()
     {
         if (Input.GetMouseButtonDown(1))
         {
-            removeDrawingLine();
+            RemoveDrawingLine();
         }
     }
 
-    private void removeDrawingLine()
+    private void RemoveDrawingLine()
     {
         if (currentNode != null)
         {
@@ -301,21 +303,18 @@ public class FloorplanManager : MonoBehaviour
             currentNode = null;
         }
     }
-    public List<GameObject> exportNodes()
+    public List<GameObject> ExportNodes()
     {
         return nodeList;
     }
 
-    public List<GameObject> exportObjects()
+    public List<GameObject> ExportObjects()
     {
         return houseObjectList;
     }
 
-    public List<GameObject> exportWindows()
+    public List<GameObject> ExportWindows()
     {
-
-        //(GetComponent<Renderer>().bounds.center, GetComponent<Renderer>().bounds.extents * 1.1f, Vector3.forward, transform.rotation, float.PositiveInfinity, layerMask);
-
         for (int i = 0; i < windowList.Count; i++)
         {
             RaycastHit[] hitList = Physics.RaycastAll(transform.TransformPoint(windowList[i].transform.position), Vector3.forward);

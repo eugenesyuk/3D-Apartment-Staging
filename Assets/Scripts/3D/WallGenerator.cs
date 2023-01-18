@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Poly2Tri;
@@ -22,7 +21,7 @@ public class WallGenerator : MonoBehaviour
     private readonly Dictionary<GameObject, List<Hole>> _wallHoles = new();
 
     private GameObject[] _walls = null;
-    private readonly int layer3D = 10;
+    private readonly int layer3D = Globals.Layers.Scene3D;
     public void Refresh()
     {
         _nodes.Clear();
