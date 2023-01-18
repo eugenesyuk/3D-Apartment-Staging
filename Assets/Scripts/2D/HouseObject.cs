@@ -80,19 +80,6 @@ public class HouseObject : MonoBehaviour {
     {
         return 0.5f/f;
     }
-    private Vector3? GetCurrentMousePosition(Vector3 screenPosition)
-    {
-        var ray = Camera.main.ScreenPointToRay(screenPosition);
-        var plane = new Plane(Vector3.forward, Vector3.zero);
-
-        float rayDistance;
-        if (plane.Raycast(ray, out rayDistance))
-        {
-            return ray.GetPoint(rayDistance);
-        }
-
-        return null;
-    }
 
     /// <summary>
     /// Test whether two line segments intersect. If so, calculate the intersection point.

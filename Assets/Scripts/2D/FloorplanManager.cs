@@ -40,13 +40,13 @@ public class FloorplanManager : MonoBehaviour
             //Debug.Log ("tap recognizer fired: " + r);
             if (gameObject.activeInHierarchy)
             {
-                if (gameObject.GetComponent<BoxCollider>().bounds.Contains(transform.TransformPoint(GetCurrentMousePosition(r.startTouchLocation()).GetValueOrDefault())))
+                if (gameObject.GetComponent<BoxCollider>().bounds.Contains(transform.TransformPoint(Utils.GetCurrentMousePosition(r.startTouchLocation()).GetValueOrDefault())))
                 {
                     if (!isDrawing)
                     {
                         didDraw = false;
                         isDrawing = true;
-                        _initialPos = GetCurrentMousePosition(r.startTouchLocation()).GetValueOrDefault();
+                        _initialPos = Utils.GetCurrentMousePosition(r.startTouchLocation()).GetValueOrDefault();
                         instantiateNode(_initialPos);
                     }
                     else
@@ -253,7 +253,7 @@ public class FloorplanManager : MonoBehaviour
 
         if (newLine != null && isDrawing)
         {
-            _currentPos = GetCurrentMousePosition(Input.mousePosition).GetValueOrDefault();
+            _currentPos = Utils.GetCurrentMousePosition(Input.mousePosition).GetValueOrDefault();
 
             if (gameObject.GetComponent<BoxCollider>().bounds.Contains(transform.TransformPoint(_currentPos)))
             {
@@ -301,23 +301,6 @@ public class FloorplanManager : MonoBehaviour
             currentNode = null;
         }
     }
-
-    private Vector3? GetCurrentMousePosition(Vector3 screenPosition)
-    {
-        if (Camera.main != null)
-        {
-            var ray = Camera.main.ScreenPointToRay(screenPosition);
-            var plane = new Plane(Vector3.forward, Vector3.zero);
-
-            float rayDistance;
-            if (plane.Raycast(ray, out rayDistance))
-            {
-                return ray.GetPoint(rayDistance);
-            }
-        }
-        return null;
-    }
-
     public List<GameObject> exportNodes()
     {
         return nodeList;

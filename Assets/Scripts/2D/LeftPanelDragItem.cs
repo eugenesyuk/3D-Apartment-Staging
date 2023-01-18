@@ -84,7 +84,7 @@ public class LeftPanelDragItem : MonoBehaviour, IPointerDownHandler, IBeginDragH
         if (this.isDragging && realWorldItem != null)
         {
             print(realWorldItem);
-            Vector3 mousePosition = GetCurrentMousePosition(Input.mousePosition).GetValueOrDefault();
+            Vector3 mousePosition = Utils.GetCurrentMousePosition(Input.mousePosition).GetValueOrDefault();
 
             realWorldItem.transform.position = mousePosition;
             RaycastHit[] hitList = Physics.BoxCastAll(mousePosition,
@@ -147,13 +147,5 @@ public class LeftPanelDragItem : MonoBehaviour, IPointerDownHandler, IBeginDragH
                 Destroy(realWorldItem);
             }
         }
-    }
-
-    private Vector3? GetCurrentMousePosition(Vector3 screenPosition)
-    {
-        var ray = Camera.main.ScreenPointToRay(screenPosition);
-        var plane = new Plane(Vector3.forward, Vector3.zero);
-
-        return plane.Raycast(ray, out float rayDistance) ? ray.GetPoint(rayDistance) : null;
     }
 }
