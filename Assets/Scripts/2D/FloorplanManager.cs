@@ -149,16 +149,16 @@ public class FloorplanManager : MonoBehaviour
         newLine.transform.position = position;
         newLine.layer = layerFloorplan;
 
-        Line w = newLine.GetComponent<Line>();
-        w.name = newLine.name;
+        Line line = newLine.GetComponent<Line>();
+        line.name = newLine.name;
 
         if (currentNode == null)
         {
-            w.startNode = initialNode;
+            line.startNode = initialNode;
         }
         else
         {
-            w.startNode = currentNode;
+            line.startNode = currentNode;
         }
 
         lineList.Add(newLine);
@@ -333,11 +333,11 @@ public class FloorplanManager : MonoBehaviour
                 }
             }
 
-            LineAttachableObject w = windowList[i].GetComponent<LineAttachableObject>();
+            LineAttachableObject window = windowList[i].GetComponent<LineAttachableObject>();
             if (correctLineIndex < hitList.Length && correctLineIndex != -1)
             {
-                w.startNode = hitList[correctLineIndex].transform.GetComponent<Line>().startNode;
-                w.endNode = hitList[correctLineIndex].transform.GetComponent<Line>().endNode;
+                window.startNode = hitList[correctLineIndex].transform.GetComponent<Line>().startNode;
+                window.endNode = hitList[correctLineIndex].transform.GetComponent<Line>().endNode;
             }
         }
         return windowList;
