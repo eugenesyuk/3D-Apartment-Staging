@@ -18,7 +18,6 @@ public class LeftPanelDragItem : MonoBehaviour, IPointerDownHandler, IBeginDragH
         rectTransform = GetComponent<RectTransform>();
     }
 
-
     public void OnPointerDown(PointerEventData eventData)
     {
         Debug.Log("OnPointerDown");
@@ -76,11 +75,11 @@ public class LeftPanelDragItem : MonoBehaviour, IPointerDownHandler, IBeginDragH
 
     public void OnDrag(PointerEventData eventData)
     {
-        handleDrag();
+        HandleDrag();
         //rectTransform.anchoredPosition += eventData.delta / canvas._scaleFactor;
     }
 
-    void handleDrag()
+    void HandleDrag()
     {
         if (this.isDragging && realWorldItem != null)
         {
@@ -88,7 +87,12 @@ public class LeftPanelDragItem : MonoBehaviour, IPointerDownHandler, IBeginDragH
             Vector3 mousePosition = GetCurrentMousePosition(Input.mousePosition).GetValueOrDefault();
 
             realWorldItem.transform.position = mousePosition;
-            RaycastHit[] hitList = Physics.BoxCastAll(mousePosition, realWorldItem.GetComponent<Renderer>().bounds.extents * 1.1f, Vector3.forward, transform.rotation, float.PositiveInfinity, LayerMask.GetMask("Floorplan"));
+            RaycastHit[] hitList = Physics.BoxCastAll(mousePosition,
+                realWorldItem.GetComponent<Renderer>().bounds.extents * 1.1f,
+                Vector3.forward,
+                transform.rotation,
+                float.PositiveInfinity,
+                LayerMask.GetMask("Floorplan"));
 
             Debug.Log(hitList.Length);
 
@@ -132,10 +136,9 @@ public class LeftPanelDragItem : MonoBehaviour, IPointerDownHandler, IBeginDragH
                 realWorldItem.transform.Rotate(Vector3.forward, 90f);
             }
         }
-        detectRightClick();
+        DetectRightClick();
     }
-
-    void detectRightClick()
+    void DetectRightClick()
     {
         if (Input.GetMouseButtonDown(1))
         {
@@ -151,12 +154,6 @@ public class LeftPanelDragItem : MonoBehaviour, IPointerDownHandler, IBeginDragH
         var ray = Camera.main.ScreenPointToRay(screenPosition);
         var plane = new Plane(Vector3.forward, Vector3.zero);
 
-        float rayDistance;
-        if (plane.Raycast(ray, out rayDistance))
-        {
-            return ray.GetPoint(rayDistance);
-        }
-
-        return null;
+        return plane.Raycast(ray, out float rayDistance) ? ray.GetPoint(rayDistance) : null;
     }
 }

@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,8 +8,6 @@ public class UIActionManager : MonoBehaviour
     public Transform _3DCanvas, _2DCanvas;
     public FloorplanManager wallManager;
     public WallGenerator wallGenerator;
-
-    [SerializeField]
     public Button clearButton, view3DButton;
 
     private void Awake()
