@@ -46,14 +46,16 @@ public class HouseObject : MonoBehaviour {
         //GetComponent<BoxCollider>().enabled = true;
     }
 
-    public virtual void init(string category, string name, bool isWallAttachable)
+    public virtual void init(string name, bool isWallAttachable)
     {
-        GetComponent<Renderer>().material.mainTexture = Resources.Load("furniture/2D_Top/" + category + "/" + name) as Texture2D;
+        GetComponent<Renderer>().material.mainTexture = Resources.Load(name) as Texture2D;
+
         float height = GetComponent<Renderer>().material.mainTexture.height;
         float width = GetComponent<Renderer>().material.mainTexture.width;
+
         float aspect = width / height; //2
         float multiplier = 2;
-        this.category = category;
+
         if (aspect > 1)
         {
             multiplier = scaleDown(aspect);

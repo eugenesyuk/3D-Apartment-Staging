@@ -17,9 +17,10 @@ public class LineAttachableObject : HouseObject
         base.Start();
     }
 
-    public override void init(string category, string name, bool isWallAttachable)
+    public override void init(string name, bool isWallAttachable)
     {
-        base.init(category, name, isWallAttachable);
+        base.init(name, isWallAttachable);
+
         if (name.Contains("window"))
         {
             length = 1f;

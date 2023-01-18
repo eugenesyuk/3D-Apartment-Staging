@@ -39,12 +39,12 @@ public class LeftPanelDragItem : MonoBehaviour, IPointerDownHandler, IBeginDragH
         if(this.transform.name == "Window Button")
         {
             this.realWorldItem = GameObject.Instantiate(attachableHouseObject);
-            this.realWorldItem.GetComponent<HouseObject>().init("windowsanddoor", "window1", true);
+            this.realWorldItem.GetComponent<HouseObject>().init("window", true);
             this.realWorldItem.transform.parent = attachableObjectContainer;
         } else if (this.transform.name == "Door Button")
         {
             this.realWorldItem = GameObject.Instantiate(attachableHouseObject);
-            this.realWorldItem.GetComponent<HouseObject>().init("windowsanddoor", "door1", true);
+            this.realWorldItem.GetComponent<HouseObject>().init("door", true);
             this.realWorldItem.transform.parent = attachableObjectContainer;
         }
     }
