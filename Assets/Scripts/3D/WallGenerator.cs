@@ -6,8 +6,8 @@ using Poly2Tri;
 
 public class WallGenerator : MonoBehaviour
 {
-    public float thickness = 0.15f;
-    public float scaleRatio = 5f;
+    public float thickness = Globals.WallParams.Thickness;
+    private float scaleFactor = Globals.ScaleFactor;
 
     private Dictionary<Vector3, List<GameObject>> nodes = new Dictionary<Vector3, List<GameObject>>();
     private bool alternator = false;
@@ -44,7 +44,7 @@ public class WallGenerator : MonoBehaviour
             for (int j = 0; j < nodeScript.adjacentNodes.Count; j++)
             {
                 GameObject adjacentNodeObject = nodeScript.adjacentNodes[j];
-                point_pairs.Add(new Vector3[] { swapVectorYZ(nodeObject.transform.position) / scaleRatio, swapVectorYZ(adjacentNodeObject.transform.position) / scaleRatio });
+                point_pairs.Add(new Vector3[] { swapVectorYZ(nodeObject.transform.position) / scaleFactor, swapVectorYZ(adjacentNodeObject.transform.position) / scaleFactor });
             }
         }
         return point_pairs.ToArray();
@@ -255,14 +255,14 @@ public class WallGenerator : MonoBehaviour
         {
 
             Hole hole = new Hole();
-            hole.Position = window.transform.position / scaleRatio;
+            hole.Position = window.transform.position / scaleFactor;
             hole.Hole_length = window.GetComponent<LineAttachableObject>().length;
             hole.Hole_height = window.GetComponent<LineAttachableObject>().height;
             hole.Hole_elevation = window.GetComponent<LineAttachableObject>().elevation;
             //Vector3 startNode = swapVectorYZ(window.GetComponent<LineAttachableObject>().startNode.transform.position);
             //Vector3 endNode = swapVectorYZ(window.GetComponent<LineAttachableObject>().endNode.transform.position);
             GameObject wall = liesOn(hole);
-            hole.Position = swapVectorYZ(window.transform.position) / scaleRatio;
+            hole.Position = swapVectorYZ(window.transform.position) / scaleFactor;
 
             if (wall != null)
             {

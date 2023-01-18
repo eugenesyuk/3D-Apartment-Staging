@@ -323,7 +323,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   thickness: 0.15
-  scaleRatio: 5
   layerMask3D:
     serializedVersion: 2
     m_Bits: 1024
