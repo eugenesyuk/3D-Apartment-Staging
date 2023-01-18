@@ -3,24 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class LeftPanelDragItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IEndDragHandler, IDragHandler
+public class LeftPanelDragItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler
 {
     public GameObject houseObject, attachableHouseObject;
     private Transform houseObjectContainer, attachableObjectContainer;
 
-    GameObject realWorldItem = null, floorPlanContainer;
-    bool isDragging = false;
+    GameObject dragObject = null, floorPlanContainer;
+
+    public bool _isDragging = false;
 
     private RectTransform rectTransform;
 
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
-    }
-
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        Debug.Log("OnPointerDown");
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -31,64 +27,61 @@ public class LeftPanelDragItem : MonoBehaviour, IPointerDownHandler, IBeginDragH
         houseObjectContainer = GameObject.Find("HouseObjectContainer").transform;
         attachableObjectContainer = GameObject.Find("AttachableObjectContainer").transform;
 
-        isDragging = true;
+        _isDragging = true;
 
         if(this.transform.name == "Window Button")
         {
-            this.realWorldItem = GameObject.Instantiate(attachableHouseObject);
-            this.realWorldItem.GetComponent<HouseObject>().init("window", true);
-            this.realWorldItem.transform.parent = attachableObjectContainer;
+            this.dragObject = GameObject.Instantiate(attachableHouseObject);
+            this.dragObject.GetComponent<HouseObject>().init("window", true);
+            this.dragObject.transform.parent = attachableObjectContainer;
         } else if (this.transform.name == "Door Button")
         {
-            this.realWorldItem = GameObject.Instantiate(attachableHouseObject);
-            this.realWorldItem.GetComponent<HouseObject>().init("door", true);
-            this.realWorldItem.transform.parent = attachableObjectContainer;
+            this.dragObject = GameObject.Instantiate(attachableHouseObject);
+            this.dragObject.GetComponent<HouseObject>().init("door", true);
+            this.dragObject.transform.parent = attachableObjectContainer;
         }
-    }
-
-    public void OnEndDrag(PointerEventData eventData)
-    {
-        isDragging = false;
-        if (realWorldItem != null)
-        {
-            if (!realWorldItem.GetComponent<HouseObject>().isPlacable)
-            {
-                GameObject.Destroy(realWorldItem);
-            }
-            else
-            {
-                realWorldItem.transform.position = new Vector3(realWorldItem.transform.position.x, realWorldItem.transform.position.y, -10);
-
-                if (!floorPlanContainer.GetComponent<BoxCollider>().bounds.Intersects(realWorldItem.GetComponent<Renderer>().bounds))
-                {
-                    GameObject.Destroy(realWorldItem);
-                }
-                else
-                {
-                    realWorldItem.transform.position = new Vector3(realWorldItem.transform.position.x, realWorldItem.transform.position.y, 0);
-                    realWorldItem.SendMessage("PlaceObject");
-                }
-            }
-        }
-        Debug.Log("OnEndDrag");
     }
 
     public void OnDrag(PointerEventData eventData)
     {
         HandleDrag();
-        //rectTransform.anchoredPosition += eventData.delta / canvas._scaleFactor;
     }
 
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        _isDragging = false;
+
+        if (dragObject != null)
+        {
+            if (!dragObject.GetComponent<HouseObject>().isPlacable)
+            {
+                CancelDrag();
+            }
+            else
+            {
+                dragObject.transform.position = new Vector3(dragObject.transform.position.x, dragObject.transform.position.y, -10);
+
+                if (!floorPlanContainer.GetComponent<BoxCollider>().bounds.Intersects(dragObject.GetComponent<Renderer>().bounds))
+                {
+                    CancelDrag();
+                }
+                else
+                {
+                    dragObject.transform.position = new Vector3(dragObject.transform.position.x, dragObject.transform.position.y, 0);
+                    dragObject.SendMessage("PlaceObject");
+                }
+            }
+        }
+    }
     void HandleDrag()
     {
-        if (this.isDragging && realWorldItem != null)
+        if (this._isDragging && dragObject != null)
         {
-            print(realWorldItem);
             Vector3 mousePosition = Utils.GetCurrentMousePosition(Input.mousePosition).GetValueOrDefault();
+            dragObject.transform.position = mousePosition;
 
-            realWorldItem.transform.position = mousePosition;
             RaycastHit[] hitList = Physics.BoxCastAll(mousePosition,
-                realWorldItem.GetComponent<Renderer>().bounds.extents * 1.1f,
+                dragObject.GetComponent<Renderer>().bounds.extents * 1.1f,
                 Vector3.forward,
                 transform.rotation,
                 float.PositiveInfinity,
@@ -98,13 +91,13 @@ public class LeftPanelDragItem : MonoBehaviour, IPointerDownHandler, IBeginDragH
 
             if (hitList.Length > 0)
             {
-                if (!realWorldItem.GetComponent<HouseObject>().isWallAttachable)
+                if (!dragObject.GetComponent<HouseObject>().isWallAttachable)
                 {
-                    realWorldItem.SendMessage("MakeNotPlacable");
+                    dragObject.SendMessage("MakeNotPlacable");
                 }
                 else
                 {
-                    realWorldItem.SendMessage("MakePlacable");
+                    dragObject.SendMessage("MakePlacable");
                 }
 
                 //for (int i = 0; i < hitList.Length; i++)
@@ -114,38 +107,46 @@ public class LeftPanelDragItem : MonoBehaviour, IPointerDownHandler, IBeginDragH
             }
             else
             {
-                if (!realWorldItem.GetComponent<HouseObject>().isWallAttachable)
+                if (!dragObject.GetComponent<HouseObject>().isWallAttachable)
                 {
-                    realWorldItem.SendMessage("MakePlacable");
+                    dragObject.SendMessage("MakePlacable");
                 }
                 else
                 {
-                    realWorldItem.SendMessage("MakeNotPlacable");
+                    dragObject.SendMessage("MakeNotPlacable");
                 }
             }
         }
     }
 
+    void CancelDrag()
+    {
+        GameObject.Destroy(dragObject);
+        dragObject = null;
+    }
+
     void Update()
     {
-        if (this.isDragging)
+        if (this._isDragging)
         {
-            if (Input.GetKeyDown(KeyCode.R) && realWorldItem != null)
+            if (Input.GetKeyDown(KeyCode.R) && dragObject != null)
             {
-                print("Hit key R" + realWorldItem);
-                realWorldItem.transform.Rotate(Vector3.forward, 90f);
+                print("Hit key R" + dragObject);
+                dragObject.transform.Rotate(Vector3.forward, 90f);
             }
         }
-        DetectRightClick();
-    }
-    void DetectRightClick()
-    {
-        if (Input.GetMouseButtonDown(1))
+
+        if(Input.GetMouseButtonDown(1))
         {
-            if (realWorldItem != null)
-            {
-                Destroy(realWorldItem);
-            }
+            onMouseRightClick();
+        }
+    }
+
+    void onMouseRightClick()
+    {
+        if (_isDragging && dragObject != null)
+        {
+             Destroy(dragObject);
         }
     }
 }
