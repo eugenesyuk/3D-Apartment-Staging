@@ -118,7 +118,6 @@ public class WallFunctions : MonoBehaviour
 
         //adjust wall parameters
 
-
         //assign material
         Material newMat = new(Shader.Find("Unlit/Texture"))
         {
