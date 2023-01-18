@@ -21,8 +21,6 @@ public class LineAttachableObject : HouseObject
 
     public override void init(string name, bool isWallAttachable)
     {
-        base.init(name, isWallAttachable);
-
         if (name.Contains("window"))
         {
             Width = Globals.Window.Width;
@@ -36,11 +34,10 @@ public class LineAttachableObject : HouseObject
             Height = Globals.Door.Height;
             Elevation = Height * 0.5f + 0.001f;
         }
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
+        base.init(name, isWallAttachable);
+
+        transform.localScale = new Vector3(Width * Globals.ScaleFactor, .7f, 0);
     }
 
     protected override void MakePlacable()
@@ -59,7 +56,7 @@ public class LineAttachableObject : HouseObject
                     if (hitList[i].transform.name.Contains("Line"))
                     {
                         print(hitList);
-                        adjustPosition(hitList[i].transform);
+                        AdjustPosition(hitList[i].transform);
                         break;
                     }
                     else
@@ -89,7 +86,7 @@ public class LineAttachableObject : HouseObject
                     firstWallPos = i;
                 }
             }
-            adjustPosition(hitList[firstWallPos].transform);
+            AdjustPosition(hitList[firstWallPos].transform);
         }
         print(wallManager + " is wall manager");
         wallManager.windowList.Add(gameObject);
@@ -97,16 +94,13 @@ public class LineAttachableObject : HouseObject
         base.PlaceObject();
     }
 
-    public void adjustPosition(Transform overlap)
+    public void AdjustPosition(Transform overlap)
     {
-        Vector p1 = new Vector(overlap.GetComponent<Line>().startNode.transform.position.x, overlap.GetComponent<Line>().startNode.transform.position.y);
-        Vector p2 = new Vector(overlap.GetComponent<Line>().endNode.transform.position.x, overlap.GetComponent<Line>().endNode.transform.position.y);
+        Vector p1 = new(overlap.GetComponent<Line>().startNode.transform.position.x, overlap.GetComponent<Line>().startNode.transform.position.y);
+        Vector p2 = new(overlap.GetComponent<Line>().endNode.transform.position.x, overlap.GetComponent<Line>().endNode.transform.position.y);
 
-        Vector q1 = new Vector(-20, transform.position.y);
-        Vector q2 = new Vector(20, transform.position.y);
-
-        Transform startNode = overlap.GetComponent<Line>().startNode.transform;
-        Transform endNode = overlap.GetComponent<Line>().endNode.transform;
+        Vector q1 = new(-20, transform.position.y);
+        Vector q2 = new(20, transform.position.y);
 
         if (overlap.transform.rotation.eulerAngles.z < 1 && overlap.transform.rotation.eulerAngles.z > -1)
         {
@@ -119,8 +113,7 @@ public class LineAttachableObject : HouseObject
             q2 = new Vector(transform.position.x, 20);
         }
 
-        Vector intersectionPoint;
-        if (LineSegementsIntersect(p1, p2, q1, q2, out intersectionPoint, true))
+        if (LineSegementsIntersect(p1, p2, q1, q2, out Vector intersectionPoint, true))
         {
             if (!double.IsNaN(intersectionPoint.X) && !double.IsNaN(intersectionPoint.Y))
             {

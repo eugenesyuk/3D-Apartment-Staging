@@ -292,7 +292,7 @@ public class WallGenerator : MonoBehaviour
     }
     private GameObject LiesOn(Hole hole)
     {
-        Vector3 relativePos = new(hole.Position.x, 1.5f, hole.Position.y);
+        Vector3 relativePos = new(hole.Position.x, hole.Position.z, hole.Position.y);
 
         print("Box pos is  " + relativePos + " " + new Vector3(Thickness, hole.HoleHeight / 2, Thickness));
 
