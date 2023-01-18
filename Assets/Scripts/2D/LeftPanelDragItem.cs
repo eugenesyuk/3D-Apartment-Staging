@@ -34,8 +34,6 @@ public class LeftPanelDragItem : MonoBehaviour, IPointerDownHandler, IBeginDragH
 
         isDragging = true;
 
-        Debug.Log(this);
-
         if(this.transform.name == "Window Button")
         {
             this.realWorldItem = GameObject.Instantiate(attachableHouseObject);
@@ -79,7 +77,7 @@ public class LeftPanelDragItem : MonoBehaviour, IPointerDownHandler, IBeginDragH
     public void OnDrag(PointerEventData eventData)
     {
         handleDrag();
-        //rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
+        //rectTransform.anchoredPosition += eventData.delta / canvas._scaleFactor;
     }
 
     void handleDrag()

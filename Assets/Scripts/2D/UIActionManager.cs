@@ -50,7 +50,7 @@ public class UIActionManager : MonoBehaviour
         _2DRoot.SetActive(false);
         _3DRoot.SetActive(true);
 
-        wallGenerator.generate3D(nodeList, windowList, objectList);
+        wallGenerator.Generate3D(nodeList, windowList, objectList);
 
         ActivateIsoCamera();
         ToggleUIMode();
@@ -61,7 +61,7 @@ public class UIActionManager : MonoBehaviour
         _2DRoot.SetActive(true);
         _3DRoot.SetActive(false);
 
-        wallGenerator.destroy3D();
+        wallGenerator.Destroy3D();
 
         ToggleUIMode();
     }
