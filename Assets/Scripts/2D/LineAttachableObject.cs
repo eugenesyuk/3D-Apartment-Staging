@@ -46,8 +46,7 @@ public class LineAttachableObject : HouseObject
         if (isWallAttachable)
         {
             RaycastHit[] hitList = Physics.BoxCastAll(GetComponent<Renderer>().bounds.center, GetComponent<Renderer>().bounds.extents * 1.1f, Vector3.forward, transform.rotation, float.PositiveInfinity, layerMask);
-            print(hitList);
-            print(layerMask);
+          
             if (hitList.Length > 0)
             {
                 for (int i = 0; i < hitList.Length; i++)
@@ -56,6 +55,7 @@ public class LineAttachableObject : HouseObject
 
                     if (hitList[i].transform.name.Contains("Line"))
                     {
+                        print(hitList);
                         adjustPosition(hitList[i].transform);
                         break;
                     }
