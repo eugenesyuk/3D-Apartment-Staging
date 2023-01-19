@@ -196,7 +196,7 @@ public class Isocam : MonoBehaviour
         // Translation
         if (_enableTranslation)
         {
-            transform.Translate(Vector3.forward * Input.mouseScrollDelta.y * Time.deltaTime * _translationSpeed);
+            transform.Translate(_translationSpeed * Input.mouseScrollDelta.y * Time.deltaTime * Vector3.forward);
         }
 
         // Movement
@@ -229,7 +229,7 @@ public class Isocam : MonoBehaviour
             // Calc acceleration
             CalculateCurrentIncrease(deltaPosition != Vector3.zero);
 
-            transform.position += deltaPosition * currentSpeed * _currentIncrease;
+            transform.position += _currentIncrease * currentSpeed * deltaPosition;
         }
 
         // Return to Init position
@@ -260,9 +260,11 @@ public class Isocam : MonoBehaviour
 
     static List<RaycastResult> GetEventSystemRaycastResults()
     {
-        PointerEventData eventData = new PointerEventData(EventSystem.current);
-        eventData.position = Input.mousePosition;
-        List<RaycastResult> raysastResults = new List<RaycastResult>();
+        PointerEventData eventData = new(EventSystem.current)
+        {
+            position = Input.mousePosition
+        };
+        List<RaycastResult> raysastResults = new();
         EventSystem.current.RaycastAll(eventData, raysastResults);
         return raysastResults;
     }
