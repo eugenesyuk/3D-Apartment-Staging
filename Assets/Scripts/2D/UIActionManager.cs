@@ -26,7 +26,7 @@ public class UIActionManager : MonoBehaviour
             ActivateIsoCamera();
         }
 
-        if(wallManager.didDraw)
+        if(wallManager.DidDraw)
         {
             clearButton.interactable = true;
             view3DButton.interactable = true;

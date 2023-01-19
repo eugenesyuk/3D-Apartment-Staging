@@ -88,9 +88,9 @@ public class LineAttachableObject : HouseObject
             }
             AdjustPosition(hitList[firstWallPos].transform);
         }
-        print(wallManager + " is wall manager");
-        wallManager.windowList.Add(gameObject);
-        gameObject.name += (wallManager.windowList.Count - 1);
+
+        wallManager.WindowList.Add(gameObject);
+        gameObject.name += (wallManager.WindowList.Count - 1);
         base.PlaceObject();
     }
 
