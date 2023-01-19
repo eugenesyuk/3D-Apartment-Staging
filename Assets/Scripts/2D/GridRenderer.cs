@@ -139,12 +139,13 @@ public class GridRenderer : MonoBehaviour
 
         return dimensions;
     }
-    public GameObject GetClosestLineY(Vector3 position)
+
+    GameObject GetClosestLine(List<GameObject> lineList, Vector3 position)
     {
         GameObject closest = null;
         float minDist = Mathf.Infinity;
 
-        foreach (GameObject obj in gridLineListY)
+        foreach (GameObject obj in lineList)
         {
             LineRenderer lineRenderer = obj.GetComponent<LineRenderer>();
             float dist = Vector3.Distance(position, lineRenderer.GetPosition(0));
@@ -159,23 +160,13 @@ public class GridRenderer : MonoBehaviour
         return closest;
     }
 
+    public GameObject GetClosestLineY(Vector3 position)
+    {
+        return GetClosestLine(gridLineListY, position);
+    }
+
     public GameObject GetClosestLineX(Vector3 position)
     {
-        GameObject closest = null;
-        float minDist = Mathf.Infinity;
-
-        foreach (GameObject obj in gridLineListX)
-        {
-            LineRenderer lineRenderer = obj.GetComponent<LineRenderer>();
-            float dist = Vector3.Distance(position, lineRenderer.GetPosition(0));
-
-            if (dist < minDist)
-            {
-                closest = obj;
-                minDist = dist;
-            }
-        }
-
-        return closest;
+        return GetClosestLine(gridLineListX, position);
     }
 }
