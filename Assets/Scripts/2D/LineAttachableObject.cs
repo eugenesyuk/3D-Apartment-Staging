@@ -113,7 +113,7 @@ public class LineAttachableObject : HouseObject
             q2 = new Vector(transform.position.x, 20);
         }
 
-        if (LineSegementsIntersect(p1, p2, q1, q2, out Vector intersectionPoint, true))
+        if (Utils.LineSegementsIntersect(p1, p2, q1, q2, out Vector intersectionPoint, true))
         {
             if (!double.IsNaN(intersectionPoint.X) && !double.IsNaN(intersectionPoint.Y))
             {
