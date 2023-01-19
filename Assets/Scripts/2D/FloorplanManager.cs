@@ -8,27 +8,37 @@ public class FloorplanManager : MonoBehaviour
     public GameObject lineSprite;
     public GameObject nodeSprite;
     public Transform lineContainer, nodeContainer, houseObjectcontainer, windowContainer;
-
-    GameObject newLine;
-    GameObject initialNode, currentNode;
+    public bool SnapToGid = true;
 
     public List<GameObject> nodeList = new();
     public List<GameObject> lineList = new();
     public List<GameObject> windowList = new();
     public List<GameObject> houseObjectList = new();
 
-    private Vector3 _initialPos, _currentPos;
-    
-    public bool isDrawing = false; //This is used to determine whether the user has stopped drawing (right click) and perform necessary action
-                                   // Use this for initialization
-    public bool didDraw = false;
+    public bool isDrawing = false;
+    public bool didDraw = false; 
 
-    private readonly float _xRotation;
-    private readonly int layerFloorplan = Globals.Layers.Floorplan;
+    GameObject newLine;
+    GameObject initialNode, currentNode;
+
+    private Vector3 _initialPos, _currentPos;
+
+    readonly float _xRotation;
+    readonly int layerFloorplan = Globals.Layers.Floorplan;
+
+    LineRenderer _highlightedLineX, _highlightedLineY;
+    Color _highlightedLineXColor, _highlightedLineYColor;
 
     void Start()
     {
         AddTapGesture();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        AdjustLineOnDraw();
+        DetectRightClick();
     }
 
     void AddTapGesture()
@@ -65,7 +75,6 @@ public class FloorplanManager : MonoBehaviour
                     }
 
                     InstantiateLine(_initialPos);
-
                 }
                 else
                 {
@@ -76,6 +85,76 @@ public class FloorplanManager : MonoBehaviour
 
 
         TouchKit.addGestureRecognizer(tapRecognizer);
+    }
+
+    void AdjustLineOnDraw()
+    {
+        if (newLine != null && isDrawing)
+        {
+            _currentPos = SnapToGrid(Utils.GetCurrentMousePosition(Input.mousePosition).GetValueOrDefault());
+
+            if (gameObject.GetComponent<BoxCollider>().bounds.Contains(transform.TransformPoint(_currentPos)))
+            {
+                Vector3 direction = _currentPos - _initialPos;
+
+                // Need to give new value of rotation for the line script
+                float angle = ((Mathf.Atan2(direction.x, direction.y) * Mathf.Rad2Deg) - 90) * -1;
+                Quaternion newRotation = Quaternion.AngleAxis(angle, Vector3.forward);
+                Vector3 newScale = new(direction.magnitude, newLine.transform.localScale.y, newLine.transform.localScale.z);
+
+                newLine.transform.rotation = newRotation;
+                newLine.transform.localScale = newScale;
+                newLine.GetComponent<Line>().RenderLineSizeLabel(_initialPos, _currentPos, lineContainer);
+            }
+        }
+    }
+    private Vector3 SnapToGrid(Vector3 mousePosition)
+    {
+        Vector3 resultPosition = mousePosition;
+
+        if(SnapToGid)
+        {
+            var gridRenderer = gameObject.GetComponent<GridRenderer>();
+
+            GameObject closestGridLineY = gridRenderer.GetClosestLineX(mousePosition);
+            GameObject closestGridLineX = gridRenderer.GetClosestLineY(mousePosition);
+
+            LineRenderer lineYRenderer = closestGridLineY.GetComponent<LineRenderer>();
+            LineRenderer lineXRenderer = closestGridLineX.GetComponent<LineRenderer>();
+
+            Vector p1 = new(lineYRenderer.GetPosition(0).x, lineYRenderer.GetPosition(0).y);
+            Vector p2 = new(lineYRenderer.GetPosition(1).x, lineYRenderer.GetPosition(1).y);
+
+            Vector q1 = new(lineXRenderer.GetPosition(0).x, lineXRenderer.GetPosition(0).y);
+            Vector q2 = new(lineXRenderer.GetPosition(1).x, lineXRenderer.GetPosition(1).y);
+
+            if (Utils.LineSegementsIntersect(p1, p2, q1, q2, out Vector intersectionPoint, true))
+            {
+                ResetLineHighlight();
+
+                _highlightedLineX = lineXRenderer;
+                _highlightedLineY = lineYRenderer;
+
+                _highlightedLineXColor = lineXRenderer.colorGradient.Evaluate(0);
+                _highlightedLineYColor = lineYRenderer.colorGradient.Evaluate(0);
+
+                lineYRenderer.startColor = lineYRenderer.endColor = lineXRenderer.startColor = lineXRenderer.endColor = Globals.Line.HighlightColor;
+
+                resultPosition = new Vector3((float)intersectionPoint.X, (float)intersectionPoint.Y, 0);
+            }
+
+        }
+
+        return resultPosition;
+    }
+
+    void ResetLineHighlight()
+    {
+        if (_highlightedLineX != null && _highlightedLineY != null)
+        {
+            _highlightedLineX.startColor = _highlightedLineX.endColor = _highlightedLineXColor;
+            _highlightedLineY.startColor = _highlightedLineY.endColor = _highlightedLineYColor;
+        }
     }
 
     void HandleOverlap(GameObject line)
@@ -95,7 +174,7 @@ public class FloorplanManager : MonoBehaviour
                 Vector q1 = new(lineList[i].GetComponent<Line>().startNode.transform.position.x, lineList[i].GetComponent<Line>().startNode.transform.position.y);
                 Vector q2 = new(lineList[i].GetComponent<Line>().endNode.transform.position.x, lineList[i].GetComponent<Line>().endNode.transform.position.y);
 
-                if (LineSegementsIntersect(p1, p2, q1, q2, out Vector intersectionPoint, true))
+                if (Utils.LineSegementsIntersect(p1, p2, q1, q2, out Vector intersectionPoint, true))
                 {
                     print("Line " + line.name + " Overlaps with " + lineList[i] + " at point " + intersectionPoint.X + " " + intersectionPoint.Y);
                     if (!double.IsNaN(intersectionPoint.X) || !double.IsNaN(intersectionPoint.Y))
@@ -138,8 +217,6 @@ public class FloorplanManager : MonoBehaviour
         line.transform.localScale = new Vector3(multiplier * Vector3.Distance(startNode.transform.position, line.GetComponent<Line>().endNode.transform.position), scale.y, scale.z);
 
     }
-
-
 
     void InstantiateLine(Vector3 position)
     {
@@ -245,44 +322,12 @@ public class FloorplanManager : MonoBehaviour
         lineList.Last().GetComponent<Line>().endNode = InstantiateNode(_initialPos);
         //lineList.Last().GetComponent<BoxCollider>().enabled = true;
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-        DetectRightClick();
-
-        if (newLine != null && isDrawing)
-        {
-            _currentPos = Utils.GetCurrentMousePosition(Input.mousePosition).GetValueOrDefault();
-
-            if (gameObject.GetComponent<BoxCollider>().bounds.Contains(transform.TransformPoint(_currentPos)))
-            {
-                Vector3 direction = _currentPos - _initialPos;
-
-                float newX = direction.magnitude; //The new X scale for the 
-
-                // Need to give new value of rotation for the line script
-                float angle = ((Mathf.Atan2(direction.x, direction.y) * Mathf.Rad2Deg) - 90) * -1;
-                Quaternion newRotation = Quaternion.AngleAxis(angle, Vector3.forward);
-
-                //_xRotation = Mathf.Round(newRotation.eulerAngles.z / 5) * 5;
-                //newRotation = Quaternion.Euler(newRotation.x, newRotation.y, _xRotation);
-                newLine.transform.rotation = newRotation;
-
-                Vector3 newScale = new(newX, newLine.transform.localScale.y, newLine.transform.localScale.z);
-                newLine.transform.localScale = newScale;
-
-                newLine.GetComponent<Line>().RenderLineSizeLabel(_initialPos, _currentPos, lineContainer);
-            }
-        }
-    }
-
     private void DetectRightClick()
     {
         if (Input.GetMouseButtonDown(1))
         {
             RemoveDrawingLine();
+            ResetLineHighlight();
         }
     }
 
@@ -376,68 +421,5 @@ public class FloorplanManager : MonoBehaviour
             }
             else UnityEngine.Object.DestroyImmediate(child.gameObject);
         }
-    }
-
-    /// <summary>
-    /// Test whether two line segments intersect. If so, calculate the intersection point.
-    /// <see cref="http://stackoverflow.com/a/14143738/292237"/>
-    /// </summary>
-    /// <param name="p">Vector to the start point of p.</param>
-    /// <param name="p2">Vector to the end point of p.</param>
-    /// <param name="q">Vector to the start point of q.</param>
-    /// <param name="q2">Vector to the end point of q.</param>
-    /// <param name="intersection">The point of intersection, if any.</param>
-    /// <param name="considerOverlapAsIntersect">Do we consider overlapping lines as intersecting?
-    /// </param>
-    /// <returns>True if an intersection point was found.</returns>
-    public static bool LineSegementsIntersect(Vector p, Vector p2, Vector q, Vector q2,
-        out Vector intersection, bool considerCollinearOverlapAsIntersect = false)
-    {
-        intersection = new Vector();
-
-        var r = p2 - p;
-        var s = q2 - q;
-        var rxs = r.Cross(s);
-        var qpxr = (q - p).Cross(r);
-
-        // If r x s = 0 and (q - p) x r = 0, then the two lines are collinear.
-        if (rxs.IsZero() && qpxr.IsZero())
-        {
-            // 1. If either  0 <= (q - p) * r <= r * r or 0 <= (p - q) * s <= * s
-            // then the two lines are overlapping,
-            if (considerCollinearOverlapAsIntersect)
-                if ((0 <= (q - p) * r && (q - p) * r <= r * r) || (0 <= (p - q) * s && (p - q) * s <= s * s))
-                    return true;
-
-            // 2. If neither 0 <= (q - p) * r = r * r nor 0 <= (p - q) * s <= s * s
-            // then the two lines are collinear but disjoint.
-            // No need to implement this expression, as it follows from the expression above.
-            return false;
-        }
-
-        // 3. If r x s = 0 and (q - p) x r != 0, then the two lines are parallel and non-intersecting.
-        if (rxs.IsZero() && !qpxr.IsZero())
-            return false;
-
-        // t = (q - p) x s / (r x s)
-        var t = (q - p).Cross(s) / rxs;
-
-        // u = (q - p) x r / (r x s)
-
-        var u = (q - p).Cross(r) / rxs;
-
-        // 4. If r x s != 0 and 0 <= t <= 1 and 0 <= u <= 1
-        // the two line segments meet at the point p + t r = q + u s.
-        if (!rxs.IsZero() && (0 <= t && t <= 1) && (0 <= u && u <= 1))
-        {
-            // We can calculate the intersection point using either t or u.
-            intersection = p + t * r;
-
-            // An intersection was found.
-            return true;
-        }
-
-        // 5. Otherwise, the two line segments are not parallel but do not intersect.
-        return false;
     }
 }

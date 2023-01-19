@@ -1,8 +1,7 @@
 
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-
+using System.Linq;
 
 public class GridRenderer : MonoBehaviour
 {
@@ -15,22 +14,23 @@ public class GridRenderer : MonoBehaviour
     Vector3 bottomRight;
     Vector3 topRight;
 
-    int minScale = 1;
-    int maxScale = 40;
+    readonly int minScale = 1;
+    readonly int maxScale = 40;
+    readonly float thickLineMultiplier = 1.5f;
 
-    float thickLineMultiplier = 1.5f;
-
-    List<GameObject> gridLineList = new List<GameObject>();
+    List<GameObject> gridLineList = new();
+    List<GameObject> gridLineListX = new();
+    List<GameObject> gridLineListY = new();
 
     // Use this for initialization
     void Start()
     {
-        generateGrid();
+        GenerateGrid();
     }
 
-    void generateGrid()
+    void GenerateGrid()
     {
-        destroyGrid();
+        DestroyGrid();
 
         RectTransform appContainerRt = appContainer.transform as RectTransform;
         RectTransform gridContainerRt = gridContainer.transform as RectTransform;
@@ -45,12 +45,16 @@ public class GridRenderer : MonoBehaviour
         GetComponent<BoxCollider>().center = new Vector2(Mathf.Abs(screenLeft.x - bottomLeft.x) / 2, -(screenTop.y - topRight.y) / 2);
     }
 
-    void destroyGrid()
+    void DestroyGrid()
     {
         foreach (GameObject g in gridLineList)
         {
             Destroy(g);
         }
+
+        gridLineList.Clear();
+        gridLineListX.Clear();
+        gridLineListY.Clear();
     }
 
     // Update is called once per frame
@@ -59,18 +63,18 @@ public class GridRenderer : MonoBehaviour
         if (Input.GetAxis("Mouse ScrollWheel") > 0) // back
         {
             Camera.main.orthographicSize = Mathf.Max(Camera.main.orthographicSize - 1, minScale);
-            generateGrid();
+            GenerateGrid();
         }
         if (Input.GetAxis("Mouse ScrollWheel") < 0) // forward
         {
             Camera.main.orthographicSize = Mathf.Min(Camera.main.orthographicSize + 1, maxScale);
-            generateGrid();
+            GenerateGrid();
         }
     }
 
     void RenderLines(Vector2 dimensions, float thickness)
     {
-        Vector2 numberOfLines = new Vector2(Mathf.CeilToInt(dimensions.x), Mathf.CeilToInt(dimensions.y));
+        Vector2 numberOfLines = new(Mathf.CeilToInt(dimensions.x), Mathf.CeilToInt(dimensions.y));
         float adjustY = Mathf.Abs((int)dimensions.y - dimensions.y) / 2 + 0.5f;
         float adjustX = Mathf.Abs((int)dimensions.x - dimensions.x) / 2;
 
@@ -79,6 +83,7 @@ public class GridRenderer : MonoBehaviour
         {
             GameObject go = GameObject.Instantiate(gridLine);
             go.transform.parent = transform; //Make this the parent
+            go.layer = Globals.Layers.Grid;
             LineRenderer lineRenderer = go.GetComponent<LineRenderer>();
             lineRenderer.SetVertexCount(2);
             lineRenderer.SetWidth(thickness, thickness);
@@ -87,10 +92,11 @@ public class GridRenderer : MonoBehaviour
 
             if (i % 5 == 0)
             {
-                lineRenderer.SetColors(new Color(0.75f, 0.75f, 0.75f, 1f), new Color(0.75f, 0.75f, 0.75f, 1f));
+                lineRenderer.SetColors(Globals.Line.Color, Globals.Line.Color);
                 lineRenderer.SetWidth(thickness * thickLineMultiplier, thickness * thickLineMultiplier);
             }
-            gridLineList.Add(go);
+
+            gridLineListY.Add(go);
         }
 
         // Generate line from left to right
@@ -106,12 +112,14 @@ public class GridRenderer : MonoBehaviour
 
             if (j % 5 == 0)
             {
-                lineRenderer.SetColors(new Color(0.75f, 0.75f, 0.75f, 1f), new Color(0.75f, 0.75f, 0.75f, 1f));
+                lineRenderer.SetColors(Globals.Line.Color, Globals.Line.Color);
                 lineRenderer.SetWidth(thickness * thickLineMultiplier, thickness * thickLineMultiplier);
             }
-            gridLineList.Add(go);
+
+            gridLineListX.Add(go);
         }
 
+        gridLineList = gridLineListY.Union<GameObject>(gridLineListX).ToList<GameObject>();
     }
     Vector2 CalculateScreenSizeInWorldCoords(float xRatio, float yRatio)
     {
@@ -125,8 +133,47 @@ public class GridRenderer : MonoBehaviour
         float width = (bottomRight - bottomLeft).magnitude;
         float height = (topRight - bottomRight).magnitude;
 
-        Vector2 dimensions = new Vector2(width, height);
+        Vector2 dimensions = new(width, height);
 
         return dimensions;
+    }
+    public GameObject GetClosestLineY(Vector3 position)
+    {
+        GameObject closest = null;
+        float minDist = Mathf.Infinity;
+
+        foreach (GameObject obj in gridLineListY)
+        {
+            LineRenderer lineRenderer = obj.GetComponent<LineRenderer>();
+            float dist = Vector3.Distance(position, lineRenderer.GetPosition(0));
+
+            if (dist < minDist)
+            {
+                closest = obj;
+                minDist = dist;
+            }
+        }
+
+        return closest;
+    }
+
+    public GameObject GetClosestLineX(Vector3 position)
+    {
+        GameObject closest = null;
+        float minDist = Mathf.Infinity;
+
+        foreach (GameObject obj in gridLineListX)
+        {
+            LineRenderer lineRenderer = obj.GetComponent<LineRenderer>();
+            float dist = Vector3.Distance(position, lineRenderer.GetPosition(0));
+
+            if (dist < minDist)
+            {
+                closest = obj;
+                minDist = dist;
+            }
+        }
+
+        return closest;
     }
 }
