@@ -19,8 +19,8 @@ public class GridRenderer : MonoBehaviour
     readonly float thickLineMultiplier = 1.5f;
 
     List<GameObject> gridLineList = new();
-    List<GameObject> gridLineListX = new();
-    List<GameObject> gridLineListY = new();
+    readonly List<GameObject> gridLineListX = new();
+    readonly List<GameObject> gridLineListY = new();
 
     // Use this for initialization
     void Start()
@@ -81,19 +81,20 @@ public class GridRenderer : MonoBehaviour
         // Generate lines vertically
         for (int i = 0; i < numberOfLines.x; i++)
         {
-            GameObject go = GameObject.Instantiate(gridLine);
+            GameObject go = Instantiate(gridLine);
             go.transform.parent = transform; //Make this the parent
             go.layer = Globals.Layers.Grid;
+
             LineRenderer lineRenderer = go.GetComponent<LineRenderer>();
-            lineRenderer.SetVertexCount(2);
-            lineRenderer.SetWidth(thickness, thickness);
+            lineRenderer.positionCount = 2;
+            lineRenderer.startWidth = lineRenderer.endWidth = thickness;
             lineRenderer.SetPosition(0, new Vector3(bottomLeft.x + (i) + adjustX, bottomLeft.y, 1));
             lineRenderer.SetPosition(1, new Vector3(bottomLeft.x + (i) + adjustX, topRight.y, 1));
 
             if (i % 5 == 0)
             {
-                lineRenderer.SetColors(Globals.Line.Color, Globals.Line.Color);
-                lineRenderer.SetWidth(thickness * thickLineMultiplier, thickness * thickLineMultiplier);
+                lineRenderer.startColor = lineRenderer.endColor = Globals.Line.Color;
+                lineRenderer.startWidth = lineRenderer.endWidth = thickness * thickLineMultiplier;
             }
 
             gridLineListY.Add(go);
@@ -102,24 +103,25 @@ public class GridRenderer : MonoBehaviour
         // Generate line from left to right
         for (int j = 0; j < numberOfLines.y; j++)
         {
-            GameObject go = GameObject.Instantiate(gridLine);
+            GameObject go = Instantiate(gridLine);
             go.transform.parent = transform; //Make this the parents
+
             LineRenderer lineRenderer = go.GetComponent<LineRenderer>();
-            lineRenderer.SetVertexCount(2);
-            lineRenderer.SetWidth(thickness, thickness);
+            lineRenderer.positionCount = 2;
+            lineRenderer.startWidth = lineRenderer.endWidth = thickness;
             lineRenderer.SetPosition(0, new Vector3(bottomLeft.x, bottomLeft.y + adjustY + (j), 1));
             lineRenderer.SetPosition(1, new Vector3(bottomRight.x, bottomLeft.y + adjustY + (j), 1));
 
             if (j % 5 == 0)
             {
-                lineRenderer.SetColors(Globals.Line.Color, Globals.Line.Color);
-                lineRenderer.SetWidth(thickness * thickLineMultiplier, thickness * thickLineMultiplier);
+                lineRenderer.startColor = lineRenderer.endColor = Globals.Line.Color;
+                lineRenderer.startWidth = lineRenderer.endWidth = thickness * thickLineMultiplier;
             }
 
             gridLineListX.Add(go);
         }
 
-        gridLineList = gridLineListY.Union<GameObject>(gridLineListX).ToList<GameObject>();
+        gridLineList = gridLineListY.Concat(gridLineListX).ToList();
     }
     Vector2 CalculateScreenSizeInWorldCoords(float xRatio, float yRatio)
     {
