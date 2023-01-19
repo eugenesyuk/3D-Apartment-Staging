@@ -19,7 +19,7 @@ public class LineAttachableObject : HouseObject
         base.Start();
     }
 
-    public override void init(string name, bool isWallAttachable)
+    public override void Init(string name, bool isWallAttachable)
     {
         if (name.Contains("window"))
         {
@@ -35,7 +35,7 @@ public class LineAttachableObject : HouseObject
             Elevation = Height * 0.5f + 0.001f;
         }
 
-        base.init(name, isWallAttachable);
+        base.Init(name, isWallAttachable);
 
         transform.localScale = new Vector3(Width * Globals.ScaleFactor, .7f, 0);
     }

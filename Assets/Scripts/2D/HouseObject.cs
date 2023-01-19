@@ -21,11 +21,6 @@ public class HouseObject : MonoBehaviour {
         print("Line manager is " + wallManager);
 	}
 	
-	// Update is called once per frame
-	void Update () {
-	
-	}
-
     protected virtual void MakeNotPlacable()
     {
         print("Objct is unplacable");
@@ -46,7 +41,7 @@ public class HouseObject : MonoBehaviour {
         //GetComponent<BoxCollider>().enabled = true;
     }
 
-    public virtual void init(string name, bool isWallAttachable)
+    public virtual void Init(string name, bool isWallAttachable)
     {
         GetComponent<Renderer>().material.mainTexture = Resources.Load(name) as Texture2D;
 
@@ -58,11 +53,11 @@ public class HouseObject : MonoBehaviour {
 
         if (aspect > 1)
         {
-            multiplier = scaleDown(aspect);
+            multiplier = ScaleDown(aspect);
             print("Multiplier is " + multiplier);
             if (multiplier < 0.5f)
             {
-                multiplier *= scaleUp(multiplier);
+                multiplier *= ScaleUp(multiplier);
             }
         }
 
@@ -71,12 +66,12 @@ public class HouseObject : MonoBehaviour {
         this.isWallAttachable = isWallAttachable;
     }
 
-    float scaleDown(float f)
+    float ScaleDown(float f)
     {
         return 1/f;
     }
 
-    float scaleUp(float f)
+    float ScaleUp(float f)
     {
         return 0.5f/f;
     }

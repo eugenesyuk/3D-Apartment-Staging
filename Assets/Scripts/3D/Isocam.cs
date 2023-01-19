@@ -232,7 +232,7 @@ public class Isocam : MonoBehaviour
             transform.position += deltaPosition * currentSpeed * _currentIncrease;
         }
 
-        // Return to init position
+        // Return to Init position
         if (Input.GetKeyDown(_initPositonButton))
         {
             transform.position = _initPosition;
