@@ -1584,19 +1584,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08b7db79c139c3345908a0f7cb124b14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lineSprite: {fileID: 106298, guid: 569ba35a619a1d54d89ddfa7122819ff, type: 3}
-  nodeSprite: {fileID: 144452, guid: 2a1c11192f2bb794aa56e1121863fd0b, type: 3}
-  lineContainer: {fileID: 702577753}
-  nodeContainer: {fileID: 1742429258}
-  houseObjectcontainer: {fileID: 929639037}
-  windowContainer: {fileID: 1710026822}
-  SnapToGid: 1
-  nodeList: []
-  lineList: []
-  windowList: []
-  houseObjectList: []
-  isDrawing: 0
-  didDraw: 0
+  LineSprite: {fileID: 106298, guid: 569ba35a619a1d54d89ddfa7122819ff, type: 3}
+  NodeSprite: {fileID: 144452, guid: 2a1c11192f2bb794aa56e1121863fd0b, type: 3}
+  LineContainer: {fileID: 702577753}
+  NodeContainer: {fileID: 1742429258}
+  HouseObjectContainer: {fileID: 929639037}
+  AttachableObjectContainer: {fileID: 1710026822}
+  SnapToGrid: 1
+  NodeList: []
+  LineList: []
+  WindowList: []
+  HouseObjectList: []
+  IsDrawing: 0
+  DidDraw: 0
 --- !u!1 &803974878
 GameObject:
   m_ObjectHideFlags: 0

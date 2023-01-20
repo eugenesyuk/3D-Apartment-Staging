@@ -3,6 +3,8 @@ using UnityEngine;
 public static class Globals 
 {
     public static float ScaleFactor = 5f;
+    public static float SnapProxmityFactor = .2f;
+
     public class WallParams
     {
         public static float Height = 2.7f;

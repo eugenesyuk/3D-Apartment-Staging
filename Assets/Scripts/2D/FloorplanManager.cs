@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+
 public class FloorplanManager : MonoBehaviour
 {
 
@@ -15,7 +16,7 @@ public class FloorplanManager : MonoBehaviour
     public List<GameObject> HouseObjectList = new();
 
     public bool IsDrawing = false;
-    public bool DidDraw = false; 
+    public bool DidDraw = false;
 
     GameObject _newLine;
     GameObject _initialNode, _currentNode;
@@ -34,6 +35,7 @@ public class FloorplanManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        _ = SnapToGridLines(Utils.GetCurrentMousePosition());
         RenderDrawingLine();
         OnClickMouseRight();
     }
@@ -44,41 +46,36 @@ public class FloorplanManager : MonoBehaviour
 
         tapRecognizer.gestureRecognizedEvent += (r) =>
         {
-            if (gameObject.activeInHierarchy)
+            if (!gameObject.activeInHierarchy) return;
+
+            Vector2 tapPosition = Utils.GetMousePosition(r.startTouchLocation()).GetValueOrDefault();
+
+            if (gameObject.GetComponent<BoxCollider>().bounds.Contains(transform.TransformPoint(tapPosition)))
             {
-                if (gameObject.GetComponent<BoxCollider>().bounds.Contains(transform.TransformPoint(Utils.GetCurrentMousePosition(r.startTouchLocation()).GetValueOrDefault())))
+                if (!IsDrawing)
                 {
-                    if (!IsDrawing)
-                    {
-                        DidDraw = false;
-                        IsDrawing = true;
-                        _initialPos = Utils.GetCurrentMousePosition(r.startTouchLocation()).GetValueOrDefault();
-                        InstantiateNode(_initialPos);
-                    }
-                    else
-                    {
-                        DidDraw = true;
-                        float newXpos = LineList.Last().transform.position.x + LineList.Last().transform.localScale.x * Mathf.Cos(Mathf.PI / 180f);
-                        float newYpos = LineList.Last().transform.position.y + LineList.Last().transform.localScale.x * Mathf.Sin(Mathf.PI / 180f);
+                    DidDraw = false;
+                    IsDrawing = true;
 
-                        newXpos = Mathf.Round(newXpos * 100) / 100f;
-                        newYpos = Mathf.Round(newYpos * 100) / 100f;
-
-                        _initialPos = _currentPos;
-
-                        SetPreviousLineEndNode();
-                        HandleOverlap(LineList.Last());
-                    }
-
-                    InstantiateLine(_initialPos);
+                    _initialPos = SnapToGridLines(tapPosition);
+                    InstantiateNode(_initialPos);
                 }
                 else
                 {
-                    RemoveDrawingLine();
+                    DidDraw = true;
+                    _initialPos = _currentPos;
+
+                    SetPreviousLineEndNode();
+                    HandleOverlap(LineList.Last());
                 }
+
+                InstantiateLine(_initialPos);
+            }
+            else
+            {
+                RemoveDrawingLine();
             }
         };
-
 
         TouchKit.addGestureRecognizer(tapRecognizer);
     }
@@ -87,7 +84,7 @@ public class FloorplanManager : MonoBehaviour
     {
         if (_newLine != null && IsDrawing)
         {
-            _currentPos = OnSnapToGrid(Utils.GetCurrentMousePosition(Input.mousePosition).GetValueOrDefault());
+            _currentPos = SnapToGridLines(Utils.GetCurrentMousePosition());
 
             if (gameObject.GetComponent<BoxCollider>().bounds.Contains(transform.TransformPoint(_currentPos)))
             {
@@ -104,20 +101,40 @@ public class FloorplanManager : MonoBehaviour
             }
         }
     }
-    private Vector3 OnSnapToGrid(Vector3 mousePosition)
+    private Vector2 SnapToGridLines(Vector3 mousePosition)
     {
-        Vector3 resultPosition = mousePosition;
+        if (!SnapToGrid) return mousePosition;
 
-        if(SnapToGrid)
+        Vector2 resultPosition = mousePosition;
+        GridRenderer gridRenderer = gameObject.GetComponent<GridRenderer>();
+
+        GameObject closestGridLineY = gridRenderer.GetClosestLineY(mousePosition);
+        GameObject closestGridLineX = gridRenderer.GetClosestLineX(mousePosition);
+
+        LineRenderer lineYRenderer = closestGridLineY.GetComponent<LineRenderer>();
+        LineRenderer lineXRenderer = closestGridLineX.GetComponent<LineRenderer>();
+
+        Vector2 crossPointY = new(lineYRenderer.GetPosition(0).x, mousePosition.y);
+        Vector2 crossPointX = new(mousePosition.x, lineXRenderer.GetPosition(0).y);
+
+        float snapProximityFactor = Globals.SnapProxmityFactor;
+        float distanceToLineY = Vector2.Distance(mousePosition, crossPointY);
+        float distanceToLineX = Vector2.Distance(mousePosition, crossPointX);
+
+        ResetLineHighlight();
+
+        if (distanceToLineY < snapProximityFactor && distanceToLineX >= snapProximityFactor)
         {
-            var gridRenderer = gameObject.GetComponent<GridRenderer>();
-
-            GameObject closestGridLineY = gridRenderer.GetClosestLineX(mousePosition);
-            GameObject closestGridLineX = gridRenderer.GetClosestLineY(mousePosition);
-
-            LineRenderer lineYRenderer = closestGridLineY.GetComponent<LineRenderer>();
-            LineRenderer lineXRenderer = closestGridLineX.GetComponent<LineRenderer>();
-
+            HighlightLine(ref _highlightedLineY, ref _highlightedLineYColor, lineYRenderer);
+            return crossPointY;
+        }
+        else if (distanceToLineX < snapProximityFactor && distanceToLineY >= snapProximityFactor)
+        {
+            HighlightLine(ref _highlightedLineX, ref _highlightedLineXColor, lineXRenderer);
+            return crossPointX;
+        }
+        else if (distanceToLineY < snapProximityFactor && distanceToLineX < snapProximityFactor)
+        {
             Vector p1 = new(lineYRenderer.GetPosition(0).x, lineYRenderer.GetPosition(0).y);
             Vector p2 = new(lineYRenderer.GetPosition(1).x, lineYRenderer.GetPosition(1).y);
 
@@ -126,29 +143,33 @@ public class FloorplanManager : MonoBehaviour
 
             if (Utils.LineSegementsIntersect(p1, p2, q1, q2, out Vector intersectionPoint, true))
             {
-                ResetLineHighlight();
+                HighlightLine(ref _highlightedLineY, ref _highlightedLineYColor, lineYRenderer);
+                HighlightLine(ref _highlightedLineX, ref _highlightedLineXColor, lineXRenderer);
 
-                _highlightedLineX = lineXRenderer;
-                _highlightedLineY = lineYRenderer;
-
-                _highlightedLineXColor = lineXRenderer.colorGradient.Evaluate(0);
-                _highlightedLineYColor = lineYRenderer.colorGradient.Evaluate(0);
-
-                lineYRenderer.startColor = lineYRenderer.endColor = lineXRenderer.startColor = lineXRenderer.endColor = Globals.Line.HighlightColor;
-
-                resultPosition = new Vector3((float)intersectionPoint.X, (float)intersectionPoint.Y, 0);
+                return new Vector2((float)intersectionPoint.X, (float)intersectionPoint.Y);
             }
-
         }
 
         return resultPosition;
     }
 
+    void HighlightLine
+        (ref LineRenderer highlightedLineRef, ref Color highlightedLineColorRef, LineRenderer line)
+    {
+        highlightedLineRef = line;
+        highlightedLineColorRef = line.colorGradient.Evaluate(0);
+        line.startColor = line.endColor = Globals.Line.HighlightColor;
+    }
+
     void ResetLineHighlight()
     {
-        if (_highlightedLineX != null && _highlightedLineY != null)
+        if (_highlightedLineX != null)
         {
             _highlightedLineX.startColor = _highlightedLineX.endColor = _highlightedLineXColor;
+        }
+
+        if (_highlightedLineY != null)
+        {
             _highlightedLineY.startColor = _highlightedLineY.endColor = _highlightedLineYColor;
         }
     }
@@ -163,7 +184,7 @@ public class FloorplanManager : MonoBehaviour
         {
             if (line.GetComponent<Line>().startNode != LineList[i].GetComponent<Line>().endNode)
             {
-               
+
                 Vector p1 = new(line.GetComponent<Line>().startNode.transform.position.x, line.GetComponent<Line>().startNode.transform.position.y);
                 Vector p2 = new(line.GetComponent<Line>().endNode.transform.position.x, line.GetComponent<Line>().endNode.transform.position.y);
 
@@ -172,7 +193,6 @@ public class FloorplanManager : MonoBehaviour
 
                 if (Utils.LineSegementsIntersect(p1, p2, q1, q2, out Vector intersectionPoint, true))
                 {
-                    print("Line " + line.name + " Overlaps with " + LineList[i] + " at point " + intersectionPoint.X + " " + intersectionPoint.Y);
                     if (!double.IsNaN(intersectionPoint.X) || !double.IsNaN(intersectionPoint.Y))
                     {
                         linesToSplit.Add(LineList[i], intersectionPoint);
@@ -184,7 +204,6 @@ public class FloorplanManager : MonoBehaviour
         for (int index = 0; index < linesToSplit.Count; index++)
         {
             var item = linesToSplit.ElementAt(index);
-            print("splitting line " + item.Key + " At position " + (float)item.Value.X + " " + (float)item.Value.Y);
             SplitLine(item.Key, new Vector3((float)item.Value.X, (float)item.Value.Y, 0));
         }
     }
@@ -194,10 +213,6 @@ public class FloorplanManager : MonoBehaviour
         GameObject newNode = InstantiateIntersectionNode(position);
         GameObject startNode = line.GetComponent<Line>().startNode;
         GameObject endNode = line.GetComponent<Line>().endNode;
-
-        /*startNode.GetComponent<Node>().adjacentNodes.Remove(endNode);
-        startNode.GetComponent<Node>().adjacentNodes.Add(newNode);
-        newNode.GetComponent<Node>().adjacentNodes.Add(endNode);*/
 
         Vector3 scale = line.transform.localScale;
         int multiplier = 1;
@@ -293,19 +308,16 @@ public class FloorplanManager : MonoBehaviour
 
             NodeList.Add(newNode);
         }
-        print("Instantiating intersection node with name " + newNode.name);
 
         return newNode;
     }
 
     GameObject NormalizeNodeAtPoint(Vector3 position)
     {
-        print("Normalizing");
         for (int i = 0; i < NodeList.Count; i++)
         {
             if (NodeList[i].GetComponent<Renderer>().bounds.Contains(position))
             {
-                print("Overlap with node " + NodeList[i]);
                 return NodeList[i];
             }
         }
@@ -363,7 +375,6 @@ public class FloorplanManager : MonoBehaviour
 
             for (int j = 0; j < hitList.Length; j++)
             {
-                print("The ray hit" + hitList[j].transform.name);
                 if (hitList[j].transform.name.Contains("Line"))
                 {
                     if (Mathf.Approximately(hitList[j].transform.rotation.eulerAngles.z, WindowList[i].transform.rotation.eulerAngles.z))
@@ -393,7 +404,7 @@ public class FloorplanManager : MonoBehaviour
         DestroyChildren(LineContainer);
 
         WindowList.Clear();
-        DestroyChildren(AttachableObjectContainer); 
+        DestroyChildren(AttachableObjectContainer);
 
         HouseObjectList.Clear();
         DestroyChildren(HouseObjectContainer);
@@ -413,9 +424,9 @@ public class FloorplanManager : MonoBehaviour
             if (isPlaying)
             {
                 child.parent = null;
-                UnityEngine.Object.Destroy(child.gameObject);
+                Destroy(child.gameObject);
             }
-            else UnityEngine.Object.DestroyImmediate(child.gameObject);
+            else DestroyImmediate(child.gameObject);
         }
     }
 }

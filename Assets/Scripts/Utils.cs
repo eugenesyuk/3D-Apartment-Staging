@@ -1,12 +1,16 @@
-using System.Collections.Generic;
 using UnityEngine;
 public static class Utils
 {
-    public static Vector3? GetCurrentMousePosition(Vector3 screenPosition)
+    public static Vector3? GetMousePosition(Vector3 screenPosition)
     {
         var ray = Camera.main.ScreenPointToRay(screenPosition);
         var plane = new Plane(Vector3.forward, Vector3.zero);
         return plane.Raycast(ray, out float rayDistance) ? ray.GetPoint(rayDistance) : null;
+    }
+
+    public static Vector3 GetCurrentMousePosition()
+    {
+        return Utils.GetMousePosition(Input.mousePosition).GetValueOrDefault();
     }
 
     /// <summary>

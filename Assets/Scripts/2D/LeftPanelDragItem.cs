@@ -77,7 +77,7 @@ public class LeftPanelDragItem : MonoBehaviour, IBeginDragHandler, IEndDragHandl
     {
         if (this._isDragging && dragObject != null)
         {
-            Vector3 mousePosition = Utils.GetCurrentMousePosition(Input.mousePosition).GetValueOrDefault();
+            Vector3 mousePosition = Utils.GetCurrentMousePosition();
             dragObject.transform.position = mousePosition;
 
             RaycastHit[] hitList = Physics.BoxCastAll(mousePosition,
