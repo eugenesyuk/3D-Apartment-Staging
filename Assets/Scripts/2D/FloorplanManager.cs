@@ -218,24 +218,26 @@ public class FloorplanManager : MonoBehaviour
         int count = LineList.Count - 1;
 
         Dictionary<GameObject, Vector> linesToSplit = new();
+        Line lineComponent = line.GetComponent<Line>();
 
         for (int i = 0; i < count; i++)
         {
-            if (line.GetComponent<Line>().startNode != LineList[i].GetComponent<Line>().endNode)
+            Line currentLine = LineList[i].GetComponent<Line>();
+
+            if (lineComponent.startNode == currentLine.endNode || lineComponent.startNode == currentLine.startNode ||
+            lineComponent.endNode == currentLine.startNode || lineComponent.endNode == currentLine.endNode) continue;
+
+            Vector p1 = new(lineComponent.startNode.transform.position.x, lineComponent.startNode.transform.position.y);
+            Vector p2 = new(lineComponent.endNode.transform.position.x, lineComponent.endNode.transform.position.y);
+
+            Vector q1 = new(currentLine.startNode.transform.position.x, currentLine.startNode.transform.position.y);
+            Vector q2 = new(currentLine.endNode.transform.position.x, currentLine.endNode.transform.position.y);
+
+            if (Utils.LineSegementsIntersect(p1, p2, q1, q2, out Vector intersectionPoint, true))
             {
-
-                Vector p1 = new(line.GetComponent<Line>().startNode.transform.position.x, line.GetComponent<Line>().startNode.transform.position.y);
-                Vector p2 = new(line.GetComponent<Line>().endNode.transform.position.x, line.GetComponent<Line>().endNode.transform.position.y);
-
-                Vector q1 = new(LineList[i].GetComponent<Line>().startNode.transform.position.x, LineList[i].GetComponent<Line>().startNode.transform.position.y);
-                Vector q2 = new(LineList[i].GetComponent<Line>().endNode.transform.position.x, LineList[i].GetComponent<Line>().endNode.transform.position.y);
-
-                if (Utils.LineSegementsIntersect(p1, p2, q1, q2, out Vector intersectionPoint, true))
+                if (!double.IsNaN(intersectionPoint.X) || !double.IsNaN(intersectionPoint.Y))
                 {
-                    if (!double.IsNaN(intersectionPoint.X) || !double.IsNaN(intersectionPoint.Y))
-                    {
-                        linesToSplit.Add(LineList[i], intersectionPoint);
-                    }
+                    linesToSplit.Add(LineList[i], intersectionPoint);
                 }
             }
         }
@@ -342,7 +344,8 @@ public class FloorplanManager : MonoBehaviour
         GameObject newNode = NormalizeNodeAtPoint(position);
         if (newNode == null)
         {
-            newNode = GameObject.Instantiate(NodeSprite);
+            newNode = Instantiate(NodeSprite);
+            newNode.AddComponent<BoxCollider2D>();
             newNode.transform.position = position;
             newNode.transform.parent = NodeContainer;
             newNode.name = "Node " + NodeList.Count();
