@@ -328,8 +328,8 @@ public class FloorplanManager : MonoBehaviour
         {
             if (newNode != _currentNode)
             {
-                _currentNode.GetComponent<Node>().adjacentNodes.Add(newNode);
-                newNode.GetComponent<Node>().adjacentNodes.Add(_currentNode);
+                _currentNode.GetComponent<Node>().nextNode = newNode;
+                newNode.GetComponent<Node>().prevNode = _currentNode;
             }
         }
 
@@ -387,8 +387,9 @@ public class FloorplanManager : MonoBehaviour
         {
             LineList.Remove(_newLine);
             GameObject.DestroyImmediate(_newLine);
+            Node node = _currentNode.GetComponent<Node>();
 
-            if (_currentNode.GetComponent<Node>().adjacentNodes.Count == 0)
+            if (node.nextNode == null && node.prevNode == null)
             {
                 NodeList.Remove(_currentNode);
                 GameObject.Destroy(_currentNode);

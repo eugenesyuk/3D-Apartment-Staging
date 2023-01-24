@@ -41,11 +41,10 @@ public class WallGenerator : MonoBehaviour
         for (int i = 0; i < nodeList.Count; i++)
         {
             GameObject nodeObject = nodeList[i];
-            Node nodeScript = nodeObject.GetComponent<Node>();
-            for (int j = 0; j < nodeScript.adjacentNodes.Count; j++)
+            Node node = nodeObject.GetComponent<Node>();
+            if(node.nextNode != null)
             {
-                GameObject adjacentNodeObject = nodeScript.adjacentNodes[j];
-                pointPairs.Add(new Vector3[] { SwapVectorYZ(nodeObject.transform.position) / _scaleFactor, SwapVectorYZ(adjacentNodeObject.transform.position) / _scaleFactor });
+                pointPairs.Add(new Vector3[] { SwapVectorYZ(nodeObject.transform.position) / _scaleFactor, SwapVectorYZ(node.nextNode.transform.position) / _scaleFactor });
             }
         }
 
