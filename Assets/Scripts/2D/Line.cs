@@ -20,13 +20,14 @@ public class Line : MonoBehaviour
     void renderSizeLabel(Vector3 startPoint, Vector3 endPoint)
     {
         TextMeshPro textMesh = getSizeLabelComponent();
+        float distance = Vector3.Distance(startPoint, endPoint) / Globals.ScaleFactor;
 
         textMesh.transform.position = Vector3.Lerp(startPoint, endPoint, 0.5f);
         textMesh.color = Color.black;
         textMesh.alignment = TextAlignmentOptions.Center;
         textMesh.fontSize = 10;
 
-        textMesh.text = (Vector3.Distance(startPoint, endPoint) / 5).ToString("0.##") + "m";
+        textMesh.text = distance > 0 ? distance.ToString("0.##") + "m" : "";
     }
 
     TextMeshPro getSizeLabelComponent()
