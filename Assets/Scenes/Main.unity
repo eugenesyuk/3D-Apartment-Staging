@@ -1590,12 +1590,11 @@ MonoBehaviour:
   NodeContainer: {fileID: 1742429258}
   HouseObjectContainer: {fileID: 929639037}
   AttachableObjectContainer: {fileID: 1710026822}
-  SnapToGrid: 1
   NodeList: []
   LineList: []
   WindowList: []
   HouseObjectList: []
-  IsDrawing: 0
+  SnapToGrid: 1
   DidDraw: 0
 --- !u!1 &803974878
 GameObject:

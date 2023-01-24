@@ -7,25 +7,30 @@ public class FloorplanManager : MonoBehaviour
 
     public GameObject LineSprite;
     public GameObject NodeSprite;
-    public Transform LineContainer, NodeContainer, HouseObjectContainer, AttachableObjectContainer;
-    public bool SnapToGrid = true;
+
+    public Transform LineContainer, NodeContainer,
+    HouseObjectContainer, AttachableObjectContainer;
 
     public List<GameObject> NodeList = new();
     public List<GameObject> LineList = new();
     public List<GameObject> WindowList = new();
     public List<GameObject> HouseObjectList = new();
 
-    public bool IsDrawing = false;
+    public bool SnapToGrid = true;
     public bool DidDraw = false;
 
-    GameObject _newLine;
-    GameObject _initialNode, _currentNode;
+    bool _isDrawing = false;
+    bool _objectIsSelected = false;
+    bool _objectMoved = false;
 
-    private Vector3 _initialPos, _currentPos;
-    readonly int _layerFloorplan = Globals.Layers.Floorplan;
+    GameObject _initialNode, _currentNode, _newLine, _selectedObject;
 
     LineRenderer _highlightedLineX, _highlightedLineY;
     Color _highlightedLineXColor, _highlightedLineYColor;
+
+    Vector3 _initialMousePosition, _currentMousePosition, _offset;
+
+    readonly int _layerFloorplan = Globals.Layers.Floorplan;
 
     void Start()
     {
@@ -35,8 +40,10 @@ public class FloorplanManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        _ = SnapToGridLines(Utils.GetCurrentMousePosition());
-        RenderDrawingLine();
+        _currentMousePosition = SnapToGridLines(Utils.GetCurrentMousePosition());
+        OnObjectMove();
+        OnObjectMoved();
+        OnUpdateDrawingLine();
         OnClickMouseRight();
     }
 
@@ -52,24 +59,22 @@ public class FloorplanManager : MonoBehaviour
 
             if (gameObject.GetComponent<BoxCollider>().bounds.Contains(transform.TransformPoint(tapPosition)))
             {
-                if (!IsDrawing)
+                if (!_isDrawing && !_objectIsSelected)
                 {
-                    DidDraw = false;
-                    IsDrawing = true;
-
-                    _initialPos = SnapToGridLines(tapPosition);
-                    InstantiateNode(_initialPos);
+                    _isDrawing = true;
+                    _initialMousePosition = SnapToGridLines(tapPosition);
+                    InstantiateNode(_initialMousePosition);
                 }
                 else
                 {
                     DidDraw = true;
-                    _initialPos = _currentPos;
+                    _initialMousePosition = _currentMousePosition;
 
                     SetPreviousLineEndNode();
                     HandleOverlap(LineList.Last());
                 }
 
-                InstantiateLine(_initialPos);
+                InstantiateDrawingLine(_initialMousePosition);
             }
             else
             {
@@ -80,28 +85,62 @@ public class FloorplanManager : MonoBehaviour
         TouchKit.addGestureRecognizer(tapRecognizer);
     }
 
-    void RenderDrawingLine()
+    void OnUpdateDrawingLine()
     {
-        if (_newLine != null && IsDrawing)
+        if (_newLine != null && _isDrawing)
         {
-            _currentPos = SnapToGridLines(Utils.GetCurrentMousePosition());
-
-            if (gameObject.GetComponent<BoxCollider>().bounds.Contains(transform.TransformPoint(_currentPos)))
+            if (gameObject.GetComponent<BoxCollider>().bounds.Contains(transform.TransformPoint(_currentMousePosition)))
             {
-                Vector3 direction = _currentPos - _initialPos;
-
-                // Need to give new value of rotation for the line script
-                float angle = ((Mathf.Atan2(direction.x, direction.y) * Mathf.Rad2Deg) - 90) * -1;
-                Quaternion newRotation = Quaternion.AngleAxis(angle, Vector3.forward);
-                Vector3 newScale = new(direction.magnitude, _newLine.transform.localScale.y, _newLine.transform.localScale.z);
-
-                _newLine.transform.rotation = newRotation;
-                _newLine.transform.localScale = newScale;
-                _newLine.GetComponent<Line>().RenderLineSizeLabel(_initialPos, _currentPos, LineContainer);
+                _newLine.GetComponent<Line>().AdjustLine(_currentMousePosition);
             }
         }
     }
-    private Vector2 SnapToGridLines(Vector3 mousePosition)
+
+    void OnObjectMove()
+    {
+        if (Input.GetMouseButtonDown(0) && !_isDrawing)
+        {
+            Collider2D targetObject = Physics2D.OverlapPoint(_currentMousePosition);
+
+            if (targetObject)
+            {
+                _objectIsSelected = true;
+                _selectedObject = targetObject.transform.gameObject;
+                _offset = _selectedObject.transform.position - _currentMousePosition;
+            }
+        }
+
+        if (_selectedObject)
+        {
+            _selectedObject.transform.position = _currentMousePosition + _offset;
+            _objectMoved = true;
+        }
+
+        if (Input.GetMouseButtonUp(0) && _selectedObject)
+        {
+            _objectIsSelected = false;
+            _selectedObject = null;
+        }
+    }
+
+    void OnObjectMoved()
+    {
+        if(_objectMoved)
+        {
+            AdjustAllLines();
+            _objectMoved = false;
+        }
+    }
+
+    void AdjustAllLines()
+    {
+        foreach(GameObject line in LineList)
+        {
+            line.GetComponent<Line>().AdjustLine();
+        }
+    }
+
+    Vector2 SnapToGridLines(Vector3 mousePosition)
     {
         if (!SnapToGrid) return mousePosition;
 
@@ -125,12 +164,12 @@ public class FloorplanManager : MonoBehaviour
 
         if (distanceToLineY < snapProximityFactor && distanceToLineX >= snapProximityFactor)
         {
-            HighlightLine(ref _highlightedLineY, ref _highlightedLineYColor, lineYRenderer);
+            HighlightGridLine(ref _highlightedLineY, ref _highlightedLineYColor, lineYRenderer);
             return crossPointY;
         }
         else if (distanceToLineX < snapProximityFactor && distanceToLineY >= snapProximityFactor)
         {
-            HighlightLine(ref _highlightedLineX, ref _highlightedLineXColor, lineXRenderer);
+            HighlightGridLine(ref _highlightedLineX, ref _highlightedLineXColor, lineXRenderer);
             return crossPointX;
         }
         else if (distanceToLineY < snapProximityFactor && distanceToLineX < snapProximityFactor)
@@ -143,8 +182,8 @@ public class FloorplanManager : MonoBehaviour
 
             if (Utils.LineSegementsIntersect(p1, p2, q1, q2, out Vector intersectionPoint, true))
             {
-                HighlightLine(ref _highlightedLineY, ref _highlightedLineYColor, lineYRenderer);
-                HighlightLine(ref _highlightedLineX, ref _highlightedLineXColor, lineXRenderer);
+                HighlightGridLine(ref _highlightedLineY, ref _highlightedLineYColor, lineYRenderer);
+                HighlightGridLine(ref _highlightedLineX, ref _highlightedLineXColor, lineXRenderer);
 
                 return new Vector2((float)intersectionPoint.X, (float)intersectionPoint.Y);
             }
@@ -153,7 +192,7 @@ public class FloorplanManager : MonoBehaviour
         return resultPosition;
     }
 
-    void HighlightLine
+    void HighlightGridLine
         (ref LineRenderer highlightedLineRef, ref Color highlightedLineColorRef, LineRenderer line)
     {
         highlightedLineRef = line;
@@ -229,7 +268,7 @@ public class FloorplanManager : MonoBehaviour
 
     }
 
-    void InstantiateLine(Vector3 position)
+    void InstantiateDrawingLine(Vector3 position)
     {
         _newLine = GameObject.Instantiate(LineSprite);
         _newLine.name = "Line" + LineList.Count();
@@ -278,6 +317,7 @@ public class FloorplanManager : MonoBehaviour
             newNode.transform.parent = NodeContainer;
             newNode.name = "Node " + NodeList.Count();
             newNode.layer = _layerFloorplan;
+            newNode.AddComponent<BoxCollider2D>();
             NodeList.Add(newNode);
         }
         if (!DidDraw)
@@ -289,8 +329,10 @@ public class FloorplanManager : MonoBehaviour
             if (newNode != _currentNode)
             {
                 _currentNode.GetComponent<Node>().adjacentNodes.Add(newNode);
+                newNode.GetComponent<Node>().adjacentNodes.Add(_currentNode);
             }
         }
+
         _currentNode = newNode;
         return newNode;
     }
@@ -327,8 +369,8 @@ public class FloorplanManager : MonoBehaviour
 
     void SetPreviousLineEndNode()
     {
-        LineList.Last().GetComponent<Line>().endNode = InstantiateNode(_initialPos);
-        //LineList.Last().GetComponent<BoxCollider>().enabled = true;
+        LineList.Last().GetComponent<Line>().endNode = InstantiateNode(_initialMousePosition);
+        LineList.Last().GetComponent<BoxCollider>().enabled = true;
     }
     private void OnClickMouseRight()
     {
@@ -346,12 +388,12 @@ public class FloorplanManager : MonoBehaviour
             LineList.Remove(_newLine);
             GameObject.DestroyImmediate(_newLine);
 
-            if (_currentNode.GetComponent<Node>().adjacentNodes.Count == 0 && !DidDraw)
+            if (_currentNode.GetComponent<Node>().adjacentNodes.Count == 0)
             {
                 NodeList.Remove(_currentNode);
                 GameObject.Destroy(_currentNode);
             }
-            IsDrawing = false;
+            _isDrawing = false;
             _currentNode = null;
         }
     }
@@ -409,7 +451,7 @@ public class FloorplanManager : MonoBehaviour
         HouseObjectList.Clear();
         DestroyChildren(HouseObjectContainer);
 
-        IsDrawing = false;
+        _isDrawing = false;
         DidDraw = false;
     }
 
