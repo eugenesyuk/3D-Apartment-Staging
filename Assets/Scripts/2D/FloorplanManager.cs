@@ -192,7 +192,7 @@ public class FloorplanManager : MonoBehaviour
         (ref LineRenderer highlightedLineRef, ref Color highlightedLineColorRef, LineRenderer line)
     {
         highlightedLineRef = line;
-        highlightedLineColorRef = line.colorGradient.Evaluate(0);
+        highlightedLineColorRef = line.colorGradient.Evaluate(.5f);
         line.startColor = line.endColor = Globals.Line.HighlightColor;
     }
 

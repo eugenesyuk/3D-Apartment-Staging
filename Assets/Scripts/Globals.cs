@@ -29,7 +29,8 @@ public static class Globals
 
     public class Line
     {
-        public static Color Color = new(.75f, .75f, .75f, 1f);
+        public static Color Color = new(.75f, .75f, .75f, .5f);
+        public static Color StrongColor = new(.75f, .75f, .75f, 1f);
         public static Color HighlightColor = new(0, .496f, 1f, 1f);
     }
 }

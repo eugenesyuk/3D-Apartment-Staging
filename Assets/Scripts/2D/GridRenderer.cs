@@ -7,7 +7,7 @@ public class GridRenderer : MonoBehaviour
 {
 
     public GameObject gridLine;
-    public GameObject appContainer, gridContainer;
+    public GameObject appContainer, gridContainer, gridArea;
 
     Vector3 bottomLeft;
     Vector3 screenLeft, screenTop;
@@ -33,10 +33,10 @@ public class GridRenderer : MonoBehaviour
         DestroyGrid();
 
         RectTransform appContainerRt = appContainer.transform as RectTransform;
-        RectTransform gridContainerRt = gridContainer.transform as RectTransform;
+        RectTransform gridAreaRt = gridArea.transform as RectTransform;
 
-        float xRatio = gridContainerRt.rect.width * 1.0f / appContainerRt.rect.width;
-        float yRatio = gridContainerRt.rect.height * 1.0f / appContainerRt.rect.height;
+        float xRatio = gridAreaRt.rect.width * 1.0f / appContainerRt.rect.width;
+        float yRatio = gridAreaRt.rect.height * 1.0f / appContainerRt.rect.height;
 
         Vector3 screenDimensions = CalculateScreenSizeInWorldCoords(xRatio, yRatio);
         float pxThickness = 1f / (Screen.height / (Camera.main.orthographicSize * 2));
@@ -75,54 +75,55 @@ public class GridRenderer : MonoBehaviour
     void RenderLines(Vector2 dimensions, float thickness)
     {
         Vector2 numberOfLines = new(Mathf.CeilToInt(dimensions.x), Mathf.CeilToInt(dimensions.y));
-        float adjustY = Mathf.Abs((int)dimensions.y - dimensions.y) / 2 + 0.5f;
+
+        float adjustY = Mathf.Abs((int)dimensions.y - dimensions.y) / 2;
         float adjustX = Mathf.Abs((int)dimensions.x - dimensions.x) / 2;
 
-        // Generate lines vertically
-        for (int i = 0; i < numberOfLines.x; i++)
-        {
-            GameObject go = Instantiate(gridLine);
-            go.transform.parent = transform; //Make this the parent
-            go.layer = Globals.Layers.Grid;
-
-            LineRenderer lineRenderer = go.GetComponent<LineRenderer>();
-            lineRenderer.positionCount = 2;
-            lineRenderer.startWidth = lineRenderer.endWidth = thickness;
-            lineRenderer.SetPosition(0, new Vector3(bottomLeft.x + (i) + adjustX, bottomLeft.y, 1));
-            lineRenderer.SetPosition(1, new Vector3(bottomLeft.x + (i) + adjustX, topRight.y, 1));
-
-            if (i % 5 == 0)
-            {
-                lineRenderer.startColor = lineRenderer.endColor = Globals.Line.Color;
-                lineRenderer.startWidth = lineRenderer.endWidth = thickness * thickLineMultiplier;
-            }
-
-            gridLineListY.Add(go);
-        }
-
-        // Generate line from left to right
-        for (int j = 0; j < numberOfLines.y; j++)
-        {
-            GameObject go = Instantiate(gridLine);
-            go.transform.parent = transform; //Make this the parents
-
-            LineRenderer lineRenderer = go.GetComponent<LineRenderer>();
-            lineRenderer.positionCount = 2;
-            lineRenderer.startWidth = lineRenderer.endWidth = thickness;
-            lineRenderer.SetPosition(0, new Vector3(bottomLeft.x, bottomLeft.y + adjustY + (j), 1));
-            lineRenderer.SetPosition(1, new Vector3(bottomRight.x, bottomLeft.y + adjustY + (j), 1));
-
-            if (j % 5 == 0)
-            {
-                lineRenderer.startColor = lineRenderer.endColor = Globals.Line.Color;
-                lineRenderer.startWidth = lineRenderer.endWidth = thickness * thickLineMultiplier;
-            }
-
-            gridLineListX.Add(go);
-        }
+        RenderLinesForAxis(gridLineListY, numberOfLines.x, adjustX, thickness);
+        RenderLinesForAxis(gridLineListX, numberOfLines.y, adjustY, thickness);
 
         gridLineList = gridLineListY.Concat(gridLineListX).ToList();
     }
+
+    void RenderLinesForAxis(List<GameObject> list, float count, float adjust, float thickness)
+    {
+        // Generate line from left to right
+        for (int i = 0; i < count; i++)
+        {
+            GameObject go = Instantiate(gridLine);
+            go.transform.parent = gridContainer.transform; //Make this the parents
+            go.layer = Globals.Layers.Grid;
+
+            Vector3 pos0, pos1;
+
+            if (list == gridLineListY)
+            {
+                pos0 = new Vector3(bottomLeft.x + (i) + adjust, bottomLeft.y, 1);
+                pos1 = new Vector3(bottomLeft.x + (i) + adjust, topRight.y, 1);
+            }
+            else
+            {
+                pos0 = new Vector3(bottomLeft.x, bottomLeft.y + adjust + (i), 1);
+                pos1 = new Vector3(bottomRight.x, bottomLeft.y + adjust + (i), 1);
+            }
+
+            LineRenderer lineRenderer = go.GetComponent<LineRenderer>();
+            lineRenderer.positionCount = 2;
+            lineRenderer.startWidth = lineRenderer.endWidth = thickness;
+            lineRenderer.startColor = lineRenderer.endColor = Globals.Line.Color;
+            lineRenderer.SetPosition(0, pos0);
+            lineRenderer.SetPosition(1, pos1);
+
+            if (i % 5 == 0)
+            {
+                lineRenderer.startColor = lineRenderer.endColor = Globals.Line.StrongColor;
+                lineRenderer.startWidth = lineRenderer.endWidth = thickness * thickLineMultiplier;
+            }
+
+            list.Add(go);
+        }
+    }
+
     Vector2 CalculateScreenSizeInWorldCoords(float xRatio, float yRatio)
     {
         Camera cam = Camera.main;
