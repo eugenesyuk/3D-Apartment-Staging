@@ -6,14 +6,14 @@ public class UIActionManager : MonoBehaviour
 {
     public GameObject _3DRoot, _2DRoot, viewerCamera, isoCamera;
     public Transform _3DCanvas, _2DCanvas;
-    public FloorplanManager wallManager;
-    public WallGenerator wallGenerator;
-    public Button clearButton, view3DButton;
+    public FloorplanManager Floorplan;
+    public WallGenerator WallGenerator;
+    public Button ClearButton, View3DButton;
 
     private void Awake()
     {
-        clearButton.interactable = false;
-        view3DButton.interactable = false;
+        ClearButton.interactable = false;
+        View3DButton.interactable = false;
 
         Reset3DRootToStart();
         Reset2DRootToStart();
@@ -26,27 +26,27 @@ public class UIActionManager : MonoBehaviour
             ActivateIsoCamera();
         }
 
-        if(wallManager.DidDraw)
+        if(Floorplan.DidDraw)
         {
-            clearButton.interactable = true;
-            view3DButton.interactable = true;
+            ClearButton.interactable = true;
+            View3DButton.interactable = true;
         } else
         {
-            clearButton.interactable = false;
-            view3DButton.interactable = false;
+            ClearButton.interactable = false;
+            View3DButton.interactable = false;
         }
     }
 
     public void Clicked3DView()
     {
-        List<GameObject> lineList = wallManager.ExportLines();
-        List<GameObject> windowList = wallManager.ExportWindows();
-        List<GameObject> objectList = wallManager.ExportObjects();
+        List<GameObject> lineList = Floorplan.ExportLines();
+        List<GameObject> windowList = Floorplan.ExportWindows();
+        List<GameObject> objectList = Floorplan.ExportObjects();
 
         _2DRoot.SetActive(false);
         _3DRoot.SetActive(true);
 
-        wallGenerator.Generate3D(lineList, windowList, objectList);
+        WallGenerator.Generate3D(lineList, windowList, objectList);
 
         ActivateIsoCamera();
         ToggleUIMode();
@@ -57,7 +57,7 @@ public class UIActionManager : MonoBehaviour
         _2DRoot.SetActive(true);
         _3DRoot.SetActive(false);
 
-        wallGenerator.Destroy3D();
+        WallGenerator.Destroy3D();
 
         ToggleUIMode();
     }
@@ -69,7 +69,7 @@ public class UIActionManager : MonoBehaviour
 
     public void ClickedClear()
     {
-        wallManager.Refresh();
+        Floorplan.Refresh();
     }
     private void Reset3DRootToStart()
     {
