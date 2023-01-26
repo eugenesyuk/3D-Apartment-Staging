@@ -1469,6 +1469,37 @@ Transform:
   m_Father: {fileID: 790138562}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &737164033
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 737164034}
+  m_Layer: 0
+  m_Name: GridContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &737164034
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 737164033}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 790138562}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &785432364
 GameObject:
   m_ObjectHideFlags: 0
@@ -1541,6 +1572,7 @@ Transform:
   - {fileID: 1742429258}
   - {fileID: 929639037}
   - {fileID: 1710026822}
+  - {fileID: 737164034}
   m_Father: {fileID: 239184884}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1558,7 +1590,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridLine: {fileID: 164202, guid: 79e2675bf99f29646a581ced4f0a3135, type: 3}
   appContainer: {fileID: 1119394110}
-  gridContainer: {fileID: 1308333220}
+  gridContainer: {fileID: 737164033}
+  gridArea: {fileID: 1308333220}
 --- !u!65 &790138564
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2260,7 +2293,6 @@ GameObject:
   - component: {fileID: 1093773831}
   - component: {fileID: 1093773830}
   - component: {fileID: 1093773829}
-  - component: {fileID: 1093773832}
   m_Layer: 5
   m_Name: View 3D Button
   m_TagString: Untagged
@@ -2384,28 +2416,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1093773827}
   m_CullTransparentMesh: 1
---- !u!114 &1093773832
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1093773827}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 32ed15c8aa2fe4347bb1229a0ef51145, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _3DRoot: {fileID: 0}
-  _2DRoot: {fileID: 0}
-  viewerCamera: {fileID: 0}
-  isoCamera: {fileID: 0}
-  _3DCanvas: {fileID: 0}
-  _2DCanvas: {fileID: 0}
-  wallManager: {fileID: 0}
-  wallGenerator: {fileID: 0}
-  clearButton: {fileID: 0}
-  view3DButton: {fileID: 0}
 --- !u!1 &1119394110
 GameObject:
   m_ObjectHideFlags: 0
@@ -2827,7 +2837,7 @@ GameObject:
   - component: {fileID: 1308333221}
   - component: {fileID: 1308333223}
   m_Layer: 5
-  m_Name: GridContainer
+  m_Name: Grid Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
