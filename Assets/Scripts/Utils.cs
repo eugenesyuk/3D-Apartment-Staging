@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 public static class Utils
 {
@@ -11,6 +12,12 @@ public static class Utils
     public static Vector3 GetCurrentMousePosition()
     {
         return Utils.GetMousePosition(Input.mousePosition).GetValueOrDefault();
+    }
+    public static bool AddIfNotThere<T>(this List<T> list, T value)
+    {
+        if (list.Contains(value)) return false;
+        list.Add(value);
+        return true;
     }
 
     /// <summary>

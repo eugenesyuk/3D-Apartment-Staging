@@ -34,26 +34,26 @@ public class WallGenerator : MonoBehaviour
         _wallHoles.Clear();
     }
 
-    Vector3[][] InitPointPairsFromNodes(List<GameObject> nodeList)
+    Vector3[][] GetPointPairsFromLines(List<GameObject> lineList)
     {
         List<Vector3[]> pointPairs = new();
 
-        for (int i = 0; i < nodeList.Count; i++)
+        foreach (GameObject line in lineList)
         {
-            GameObject nodeObject = nodeList[i];
-            Node node = nodeObject.GetComponent<Node>();
-            if(node.nextNode != null)
-            {
-                pointPairs.Add(new Vector3[] { SwapVectorYZ(nodeObject.transform.position) / _scaleFactor, SwapVectorYZ(node.nextNode.transform.position) / _scaleFactor });
-            }
+            Line lineComponent = line.GetComponent<Line>();
+
+            Vector3 pointA = SwapVectorYZ(lineComponent.startNode.transform.position) / _scaleFactor;
+            Vector3 pointB = SwapVectorYZ(lineComponent.endNode.transform.position) / _scaleFactor;
+
+            pointPairs.Add(new Vector3[] { pointA, pointB });
         }
 
         return pointPairs.ToArray();
     }
 
-    public void Generate3D(List<GameObject> nodeList, List<GameObject> windowList, List<GameObject> houseObjectList)
+    public void Generate3D(List<GameObject> lineList, List<GameObject> windowList, List<GameObject> houseObjectList)
     {
-        _pointPairsArray = InitPointPairsFromNodes(nodeList);
+        _pointPairsArray = GetPointPairsFromLines(lineList);
 
         GenerateWalls();
 
@@ -69,8 +69,6 @@ public class WallGenerator : MonoBehaviour
         {
             AddHouseObjects(houseObjectList);
         }
-
-        print("House object list size is : " + houseObjectList.Count);
     }
 
     public void Destroy3D()

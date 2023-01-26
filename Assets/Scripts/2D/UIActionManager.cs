@@ -39,14 +39,14 @@ public class UIActionManager : MonoBehaviour
 
     public void Clicked3DView()
     {
-        List<GameObject> nodeList = wallManager.ExportNodes();
+        List<GameObject> lineList = wallManager.ExportLines();
         List<GameObject> windowList = wallManager.ExportWindows();
         List<GameObject> objectList = wallManager.ExportObjects();
 
         _2DRoot.SetActive(false);
         _3DRoot.SetActive(true);
 
-        wallGenerator.Generate3D(nodeList, windowList, objectList);
+        wallGenerator.Generate3D(lineList, windowList, objectList);
 
         ActivateIsoCamera();
         ToggleUIMode();

@@ -23,12 +23,12 @@ public class FloorplanManager : MonoBehaviour
     bool _objectIsSelected = false;
     bool _objectMoved = false;
 
-    GameObject _initialNode, _currentNode, _newLine, _selectedObject;
+    GameObject _currentNode, _newLine, _selectedObject;
 
     LineRenderer _highlightedLineX, _highlightedLineY;
     Color _highlightedLineXColor, _highlightedLineYColor;
 
-    Vector3 _initialMousePosition, _currentMousePosition, _offset;
+    Vector3 _currentMousePosition;
 
     readonly int _layerFloorplan = Globals.Layers.Floorplan;
 
@@ -62,19 +62,16 @@ public class FloorplanManager : MonoBehaviour
                 if (!_isDrawing && !_objectIsSelected)
                 {
                     _isDrawing = true;
-                    _initialMousePosition = SnapToGridLines(tapPosition);
-                    InstantiateNode(_initialMousePosition);
+                    InstantiateNode(_currentMousePosition);
                 }
                 else
                 {
                     DidDraw = true;
-                    _initialMousePosition = _currentMousePosition;
-
                     SetPreviousLineEndNode();
                     HandleOverlap(LineList.Last());
                 }
 
-                InstantiateDrawingLine(_initialMousePosition);
+                InstantiateDrawingLine(_currentMousePosition);
             }
             else
             {
@@ -106,13 +103,12 @@ public class FloorplanManager : MonoBehaviour
             {
                 _objectIsSelected = true;
                 _selectedObject = targetObject.transform.gameObject;
-                _offset = _selectedObject.transform.position - _currentMousePosition;
             }
         }
 
         if (_selectedObject)
         {
-            _selectedObject.transform.position = _currentMousePosition + _offset;
+            _selectedObject.transform.position = _currentMousePosition;
             _objectMoved = true;
         }
 
@@ -125,7 +121,7 @@ public class FloorplanManager : MonoBehaviour
 
     void OnObjectMoved()
     {
-        if(_objectMoved)
+        if (_objectMoved)
         {
             AdjustAllLines();
             _objectMoved = false;
@@ -238,6 +234,8 @@ public class FloorplanManager : MonoBehaviour
                 if (!double.IsNaN(intersectionPoint.X) || !double.IsNaN(intersectionPoint.Y))
                 {
                     linesToSplit.Add(LineList[i], intersectionPoint);
+                    linesToSplit.Add(line, intersectionPoint);
+                    break;
                 }
             }
         }
@@ -247,27 +245,42 @@ public class FloorplanManager : MonoBehaviour
             var item = linesToSplit.ElementAt(index);
             SplitLine(item.Key, new Vector3((float)item.Value.X, (float)item.Value.Y, 0));
         }
+
+        if(linesToSplit.Count > 0)
+        {
+            HandleOverlap(LineList.Last());
+        }
     }
 
-    void SplitLine(GameObject line, Vector3 position)
+    void SplitLine(GameObject lineObject, Vector3 position)
     {
-        GameObject newNode = InstantiateIntersectionNode(position);
-        GameObject startNode = line.GetComponent<Line>().startNode;
-        GameObject endNode = line.GetComponent<Line>().endNode;
+        Line line = lineObject.GetComponent<Line>();
 
-        Vector3 scale = line.transform.localScale;
-        int multiplier = 1;
-        if (scale.x < 0)
-        {
-            multiplier = -1;
-        }
+        GameObject startNodeObject = line.startNode;
+        GameObject intersectionNodeObject = InstantiateNode(position);
+        GameObject endNodeObject = line.endNode;
 
-        InstantiateLine(newNode, endNode, line.transform.rotation, multiplier);
+        Node startNode = startNodeObject.GetComponent<Node>();
+        Node intersectionNode = intersectionNodeObject.GetComponent<Node>();
+        Node endNode = endNodeObject.GetComponent<Node>();
 
-        line.GetComponent<Line>().endNode = newNode;
+        Vector3 scale = lineObject.transform.localScale;
+        int multiplier = scale.x < 0 ? -1 : 1;
 
-        line.transform.localScale = new Vector3(multiplier * Vector3.Distance(startNode.transform.position, line.GetComponent<Line>().endNode.transform.position), scale.y, scale.z);
+        
+        line.endNode = intersectionNodeObject;
+        InstantiateLine(intersectionNodeObject, endNodeObject, lineObject.transform.rotation, multiplier);
 
+        line.AdjustLine();
+        _newLine.GetComponent<Line>().AdjustLine();
+
+        startNode.AdjacentNodes.Remove(endNodeObject);
+        endNode.AdjacentNodes.Remove(startNodeObject);
+
+        startNode.AdjacentNodes.AddIfNotThere(intersectionNodeObject);
+        intersectionNode.AdjacentNodes.AddIfNotThere(startNodeObject);
+        intersectionNode.AdjacentNodes.AddIfNotThere(endNodeObject);
+        endNode.AdjacentNodes.AddIfNotThere(intersectionNodeObject);
     }
 
     void InstantiateDrawingLine(Vector3 position)
@@ -280,16 +293,8 @@ public class FloorplanManager : MonoBehaviour
 
         Line line = _newLine.GetComponent<Line>();
         line.name = _newLine.name;
-
-        if (_currentNode == null)
-        {
-            line.startNode = _initialNode;
-        }
-        else
-        {
-            line.startNode = _currentNode;
-        }
-
+        line.startNode = _currentNode;
+ 
         LineList.Add(_newLine);
     }
 
@@ -303,9 +308,9 @@ public class FloorplanManager : MonoBehaviour
         _newLine.transform.localScale = new Vector3(multiplier * Vector3.Distance(startNode.transform.position, endNode.transform.position), 0.2f, 1);
         _newLine.transform.rotation = rotation;
         _newLine.layer = _layerFloorplan;
-        Line w = _newLine.GetComponent<Line>();
-        w.startNode = startNode;
-        w.endNode = endNode;
+        Line line = _newLine.GetComponent<Line>();
+        line.startNode = startNode;
+        line.endNode = endNode;
         LineList.Add(_newLine);
     }
 
@@ -322,37 +327,14 @@ public class FloorplanManager : MonoBehaviour
             newNode.AddComponent<BoxCollider2D>();
             NodeList.Add(newNode);
         }
-        if (!DidDraw)
+
+        if (_currentNode != null && newNode != _currentNode)
         {
-            _initialNode = newNode;
-        }
-        if (_currentNode != null)
-        {
-            if (newNode != _currentNode)
-            {
-                _currentNode.GetComponent<Node>().nextNode = newNode;
-                newNode.GetComponent<Node>().prevNode = _currentNode;
-            }
+            _currentNode.GetComponent<Node>().AdjacentNodes.Add(newNode);
+            newNode.GetComponent<Node>().AdjacentNodes.Add(_currentNode);
         }
 
         _currentNode = newNode;
-        return newNode;
-    }
-
-    GameObject InstantiateIntersectionNode(Vector3 position)
-    {
-        GameObject newNode = NormalizeNodeAtPoint(position);
-        if (newNode == null)
-        {
-            newNode = Instantiate(NodeSprite);
-            newNode.AddComponent<BoxCollider2D>();
-            newNode.transform.position = position;
-            newNode.transform.parent = NodeContainer;
-            newNode.name = "Node " + NodeList.Count();
-            newNode.layer = _layerFloorplan;
-
-            NodeList.Add(newNode);
-        }
 
         return newNode;
     }
@@ -372,7 +354,7 @@ public class FloorplanManager : MonoBehaviour
 
     void SetPreviousLineEndNode()
     {
-        LineList.Last().GetComponent<Line>().endNode = InstantiateNode(_initialMousePosition);
+        LineList.Last().GetComponent<Line>().endNode = InstantiateNode(_currentMousePosition);
         LineList.Last().GetComponent<BoxCollider>().enabled = true;
     }
     private void OnClickMouseRight()
@@ -392,7 +374,7 @@ public class FloorplanManager : MonoBehaviour
             GameObject.DestroyImmediate(_newLine);
             Node node = _currentNode.GetComponent<Node>();
 
-            if (node.nextNode == null && node.prevNode == null)
+            if (node.AdjacentNodes.Count == 0)
             {
                 NodeList.Remove(_currentNode);
                 GameObject.Destroy(_currentNode);
@@ -404,6 +386,10 @@ public class FloorplanManager : MonoBehaviour
     public List<GameObject> ExportNodes()
     {
         return NodeList;
+    }
+    public List<GameObject> ExportLines()
+    {
+        return LineList;
     }
 
     public List<GameObject> ExportObjects()

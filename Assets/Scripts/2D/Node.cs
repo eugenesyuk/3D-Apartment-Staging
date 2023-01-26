@@ -5,8 +5,7 @@ using System.Linq;
 
 public class Node : MonoBehaviour {
 
-    public GameObject nextNode = null;
-    public GameObject prevNode = null;
+    public List<GameObject> AdjacentNodes = new();
 
     // Use this for initialization
     void Start () {
