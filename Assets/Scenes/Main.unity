@@ -1436,8 +1436,8 @@ MonoBehaviour:
   _2DCanvas: {fileID: 803974879}
   Floorplan: {fileID: 790138565}
   WallGenerator: {fileID: 94988595}
-  clearButton: {fileID: 1269496417}
-  view3DButton: {fileID: 1093773829}
+  ClearButton: {fileID: 1269496417}
+  View3DButton: {fileID: 1093773829}
 --- !u!1 &702577752
 GameObject:
   m_ObjectHideFlags: 0
