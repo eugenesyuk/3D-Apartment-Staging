@@ -8,12 +8,14 @@ public class UIActionManager : MonoBehaviour
     public Transform _3DCanvas, _2DCanvas;
     public FloorplanManager Floorplan;
     public WallGenerator WallGenerator;
-    public Button ClearButton, View3DButton;
+    public Button ClearButton, View3DButton, DeleteNode;
+    public GameObject NodeActionsPanel;
 
     private void Awake()
     {
         ClearButton.interactable = false;
         View3DButton.interactable = false;
+        HideNodePanel();
 
         Reset3DRootToStart();
         Reset2DRootToStart();
@@ -71,6 +73,27 @@ public class UIActionManager : MonoBehaviour
     {
         Floorplan.Refresh();
     }
+
+    public void ClickedRemoveNode()
+    {
+        Floorplan.RemoveSelectedNode();
+    }
+
+    public void ShowNodePanel(Vector3 position)
+    {
+        Vector2 localPoint;
+        RectTransform _2DCanvasRt = GameObject.Find("Grid Area").transform as RectTransform;
+        //Vector2 canvasRectHalf = new Vector2(_2DCanvasRt.rect.width / 2, _2DCanvasRt.rect.height / 2);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(_2DCanvasRt, position, Camera.current, out localPoint);
+        NodeActionsPanel.transform.localPosition = localPoint / 8;
+        NodeActionsPanel.gameObject.SetActive(true);
+    }
+
+    public void HideNodePanel()
+    {
+        NodeActionsPanel.gameObject.SetActive(false);
+    }
+
     private void Reset3DRootToStart()
     {
         _3DRoot.SetActive(false);

@@ -1,10 +1,14 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
+using UnityEngine.UIElements;
+using UnityEngine.EventSystems;
+using Unity.VisualScripting;
 
 public class FloorplanManager : MonoBehaviour
 {
-
+    public UIActionManager UIActionManager;
     public GameObject LineSprite;
     public GameObject NodeSprite;
 
@@ -20,66 +24,95 @@ public class FloorplanManager : MonoBehaviour
     public bool DidDraw = false;
 
     bool _isDrawing = false;
-    bool _objectIsSelected = false;
+    bool _objectIsHold = false;
     bool _objectMoved = false;
 
-    GameObject _currentNode, _newLine, _selectedObject;
+    GameObject _currentNode, _newLine, _holdObject, _selectedNode;
+    Collider2D _mouseOverObject;
 
     LineRenderer _highlightedLineX, _highlightedLineY;
     Color _highlightedLineXColor, _highlightedLineYColor;
 
-    Vector3 _currentMousePosition;
+    Vector3 _initialMousePosition, _currentMousePosition;
 
     readonly int _layerFloorplan = Globals.Layers.Floorplan;
-
-    void Start()
-    {
-        OnTapGesture();
-    }
 
     // Update is called once per frame
     void Update()
     {
         _currentMousePosition = SnapToGridLines(Utils.GetCurrentMousePosition());
-        OnObjectMove();
+        _mouseOverObject = Physics2D.OverlapPoint(_currentMousePosition);
+
+        OnMouseLeftDown();
+        OnObjectDrag();
+        OnMouseOverObject();
+        OnMouseLeftUp();
         OnObjectMoved();
         OnUpdateDrawingLine();
         OnClickMouseRight();
     }
 
-    void OnTapGesture()
+    void OnObjectDrag()
     {
-        TKTapRecognizer tapRecognizer = new();
+        float positionDifference = Vector3.Distance(_initialMousePosition, _currentMousePosition);
 
-        tapRecognizer.gestureRecognizedEvent += (r) =>
+        if (_objectIsHold &&  positionDifference > Globals.Node.Size)
         {
-            if (!gameObject.activeInHierarchy) return;
+            _holdObject.transform.position = _currentMousePosition;
+            _objectMoved = true;
 
-            Vector2 tapPosition = Utils.GetMousePosition(r.startTouchLocation()).GetValueOrDefault();
+            DeselectNode();
+            OnObjectMoved();
+        }
+    }
+    void OnMouseLeftDown()
+    {
+        if (!Input.GetMouseButtonDown(0)) return;
 
-            if (gameObject.GetComponent<BoxCollider>().bounds.Contains(transform.TransformPoint(tapPosition)))
+        _initialMousePosition = SnapToGridLines(Utils.GetCurrentMousePosition());
+
+        if (!gameObject.GetComponent<BoxCollider>().bounds.Contains(_currentMousePosition))
+        {
+            RemoveDrawingLine();
+            return;
+        }
+
+        if (!_isDrawing)
+        {
+            if (IsMouseOverNode())
             {
-                if (!_isDrawing && !_objectIsSelected)
-                {
-                    _isDrawing = true;
-                    InstantiateNode(_currentMousePosition);
-                }
-                else
-                {
-                    DidDraw = true;
-                    SetPreviousLineEndNode();
-                    HandleOverlap(LineList.Last());
-                }
-
-                InstantiateDrawingLine(_currentMousePosition);
+                _objectIsHold = true;
+                _holdObject = _mouseOverObject.transform.gameObject;
             }
             else
             {
-                RemoveDrawingLine();
+                OnDrawing();
             }
-        };
+        }
+        else
+        {
+            DidDraw = true;
+            SetPreviousLineEndNode();
+            HandleOverlap(LineList.Last());
+        }
 
-        TouchKit.addGestureRecognizer(tapRecognizer);
+        if (!_objectIsHold)
+        {
+            InstantiateDrawingLine(_currentMousePosition);
+        }
+
+    }
+
+    void OnDrawing()
+    {
+        _isDrawing = true;
+        InstantiateNode(_currentMousePosition);
+
+    }
+
+    bool IsMouseOverNode()
+    {
+        return _mouseOverObject != null && _mouseOverObject.GetComponent<Node>() != null ? true : false;
     }
 
     void OnUpdateDrawingLine()
@@ -93,30 +126,77 @@ public class FloorplanManager : MonoBehaviour
         }
     }
 
-    void OnObjectMove()
+    void OnMouseLeftUp()
     {
-        if (Input.GetMouseButtonDown(0) && !_isDrawing)
+        if (Input.GetMouseButtonUp(0))
         {
-            Collider2D targetObject = Physics2D.OverlapPoint(_currentMousePosition);
+            _objectIsHold = false;
+            _objectMoved = false;
+            _holdObject = null;
+        }
+    }
 
-            if (targetObject)
+    void OnMouseOverObject()
+    {
+        if (IsMouseOverNode() && !_isDrawing)
+        {
+            if(Input.GetMouseButtonDown(0))
             {
-                _objectIsSelected = true;
-                _selectedObject = targetObject.transform.gameObject;
+                SelectNode(_mouseOverObject);
             }
         }
+    }
 
-        if (_selectedObject)
+    public void RemoveSelectedNode()
+    {
+        if (_selectedNode == null) return;
+
+        LineList.RemoveAll(line =>
         {
-            _selectedObject.transform.position = _currentMousePosition;
-            _objectMoved = true;
+            Line lineComponent = line.GetComponent<Line>();
+            if (lineComponent.startNode == _selectedNode || lineComponent.endNode == _selectedNode)
+            {
+                Destroy(line); 
+                return true;
+            };
+            return false;
+        });
+
+        List<GameObject> unlinkedNodes = new();
+
+        foreach (GameObject node in NodeList)
+        {
+            Node nodeComponent = node.GetComponent<Node>();
+
+            if (nodeComponent.AdjacentNodes.Contains(_selectedNode))
+            {
+                nodeComponent.AdjacentNodes.Remove(_selectedNode);
+            }
+
+            if (nodeComponent.AdjacentNodes.Count == 0) unlinkedNodes.Add(node);
         }
 
-        if (Input.GetMouseButtonUp(0) && _selectedObject)
+        NodeList.Remove(_selectedNode);
+        Destroy(_selectedNode);
+
+        for (int i = 0; i < unlinkedNodes.Count - 1; i++)
         {
-            _objectIsSelected = false;
-            _selectedObject = null;
+                InstantiateLine(unlinkedNodes[i], unlinkedNodes[i + 1]);   
         }
+
+        AdjustAllLines();
+        DeselectNode();
+    }
+
+    private void SelectNode(Collider2D targetObject)
+    {
+        _selectedNode = targetObject.transform.gameObject;
+        UIActionManager.ShowNodePanel(targetObject.transform.position);
+    }
+    private void DeselectNode()
+    {
+        _selectedNode = null;
+        UIActionManager.HideNodePanel();
     }
 
     void OnObjectMoved()
@@ -124,7 +204,6 @@ public class FloorplanManager : MonoBehaviour
         if (_objectMoved)
         {
             AdjustAllLines();
-            _objectMoved = false;
         }
     }
 
@@ -314,12 +393,27 @@ public class FloorplanManager : MonoBehaviour
         LineList.Add(_newLine);
     }
 
+    void InstantiateLine(GameObject startNode, GameObject endNode)
+    {
+        _newLine = GameObject.Instantiate(LineSprite);
+        _newLine.name = "Line" + LineList.Count();
+        _newLine.transform.parent = LineContainer;
+        _newLine.transform.position = startNode.transform.position;
+        _newLine.layer = _layerFloorplan;
+        Line line = _newLine.GetComponent<Line>();
+        line.startNode = startNode;
+        line.endNode = endNode;
+        line.AdjustLine();
+        LineList.Add(_newLine);
+    }
+
     GameObject InstantiateNode(Vector3 position)
     {
         GameObject newNode = NormalizeNodeAtPoint(position);
         if (newNode == null)
         {
             newNode = GameObject.Instantiate(NodeSprite);
+            newNode.transform.localScale = new Vector3(Globals.Node.Size, Globals.Node.Size);
             newNode.transform.position = position;
             newNode.transform.parent = NodeContainer;
             newNode.name = "Node " + NodeList.Count();
@@ -371,13 +465,13 @@ public class FloorplanManager : MonoBehaviour
         if (_currentNode != null)
         {
             LineList.Remove(_newLine);
-            GameObject.DestroyImmediate(_newLine);
+            DestroyImmediate(_newLine);
             Node node = _currentNode.GetComponent<Node>();
 
             if (node.AdjacentNodes.Count == 0)
             {
-                NodeList.Remove(_currentNode);
-                GameObject.Destroy(_currentNode);
+               NodeList.Remove(_currentNode);
+               Destroy(_currentNode);
             }
             _isDrawing = false;
             _currentNode = null;
@@ -455,7 +549,7 @@ public class FloorplanManager : MonoBehaviour
 
             if (isPlaying)
             {
-                child.parent = null;
+                child.SetParent(null);
                 Destroy(child.gameObject);
             }
             else DestroyImmediate(child.gameObject);

@@ -33,4 +33,9 @@ public static class Globals
         public static Color StrongColor = new(.75f, .75f, .75f, 1f);
         public static Color HighlightColor = new(0, .496f, 1f, 1f);
     }
+
+    public class Node
+    {
+        public static float Size = .5f;
+    }
 }
