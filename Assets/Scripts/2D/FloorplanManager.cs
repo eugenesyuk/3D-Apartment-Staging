@@ -24,10 +24,10 @@ public class FloorplanManager : MonoBehaviour
     public bool DidDraw = false;
 
     bool _isDrawing = false;
-    bool _objectIsHold = false;
+    bool _objectIsDragged = false;
     bool _objectMoved = false;
 
-    GameObject _currentNode, _newLine, _holdObject, _selectedNode;
+    GameObject _currentNode, _newLine, _draggingObject, _selectedNode;
     Collider2D _mouseOverObject;
 
     LineRenderer _highlightedLineX, _highlightedLineY;
@@ -40,29 +40,27 @@ public class FloorplanManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (EventSystem.current.IsPointerOverGameObject()) return;
+
         _currentMousePosition = SnapToGridLines(Utils.GetCurrentMousePosition());
         _mouseOverObject = Physics2D.OverlapPoint(_currentMousePosition);
 
         OnMouseLeftDown();
         OnObjectDrag();
-        OnMouseOverObject();
         OnMouseLeftUp();
-        OnObjectMoved();
         OnUpdateDrawingLine();
-        OnClickMouseRight();
+        OnMouseRightDown();
     }
 
     void OnObjectDrag()
     {
         float positionDifference = Vector3.Distance(_initialMousePosition, _currentMousePosition);
-
-        if (_objectIsHold &&  positionDifference > Globals.Node.Size)
+    
+        if (_objectIsDragged &&  positionDifference > Globals.Node.Size || _objectMoved)
         {
-            _holdObject.transform.position = _currentMousePosition;
+            _draggingObject.transform.position = _currentMousePosition;
             _objectMoved = true;
-
-            DeselectNode();
-            OnObjectMoved();
+            AdjustAllLines();
         }
     }
     void OnMouseLeftDown()
@@ -77,44 +75,33 @@ public class FloorplanManager : MonoBehaviour
             return;
         }
 
-        if (!_isDrawing)
-        {
-            if (IsMouseOverNode())
-            {
-                _objectIsHold = true;
-                _holdObject = _mouseOverObject.transform.gameObject;
-            }
-            else
-            {
-                OnDrawing();
-            }
-        }
-        else
+        if (_isDrawing)
         {
             DidDraw = true;
             SetPreviousLineEndNode();
             HandleOverlap(LineList.Last());
-        }
-
-        if (!_objectIsHold)
+        } else
         {
-            InstantiateDrawingLine(_currentMousePosition);
+            if (IsMouseOverNode())
+            {
+                _objectIsDragged = true;
+                _draggingObject = _mouseOverObject.transform.gameObject;
+            }
+            else
+            {
+                _isDrawing = true;
+                InstantiateNode(_currentMousePosition);
+            }
         }
 
-    }
-
-    void OnDrawing()
-    {
-        _isDrawing = true;
-        InstantiateNode(_currentMousePosition);
-
+        if(!_objectIsDragged) InstantiateDrawingLine(_currentMousePosition);
+        DeselectNode();
     }
 
     bool IsMouseOverNode()
     {
         return _mouseOverObject != null && _mouseOverObject.GetComponent<Node>() != null ? true : false;
     }
-
     void OnUpdateDrawingLine()
     {
         if (_newLine != null && _isDrawing)
@@ -128,23 +115,16 @@ public class FloorplanManager : MonoBehaviour
 
     void OnMouseLeftUp()
     {
-        if (Input.GetMouseButtonUp(0))
-        {
-            _objectIsHold = false;
-            _objectMoved = false;
-            _holdObject = null;
-        }
-    }
+        if (!Input.GetMouseButtonUp(0)) return;
 
-    void OnMouseOverObject()
-    {
-        if (IsMouseOverNode() && !_isDrawing)
+        if (IsMouseOverNode() && !_isDrawing && !_objectMoved)
         {
-            if(Input.GetMouseButtonDown(0))
-            {
-                SelectNode(_mouseOverObject);
-            }
+            SelectNode(_mouseOverObject);
         }
+
+        _objectIsDragged = false;
+        _objectMoved = false;
+        _draggingObject = null;
     }
 
     public void RemoveSelectedNode()
@@ -197,14 +177,6 @@ public class FloorplanManager : MonoBehaviour
     {
         _selectedNode = null;
         UIActionManager.HideNodePanel();
-    }
-
-    void OnObjectMoved()
-    {
-        if (_objectMoved)
-        {
-            AdjustAllLines();
-        }
     }
 
     void AdjustAllLines()
@@ -451,13 +423,13 @@ public class FloorplanManager : MonoBehaviour
         LineList.Last().GetComponent<Line>().endNode = InstantiateNode(_currentMousePosition);
         LineList.Last().GetComponent<BoxCollider>().enabled = true;
     }
-    private void OnClickMouseRight()
+    private void OnMouseRightDown()
     {
-        if (Input.GetMouseButtonDown(1))
-        {
-            RemoveDrawingLine();
-            ResetLineHighlight();
-        }
+        if (!Input.GetMouseButtonDown(1)) return;
+
+        RemoveDrawingLine();
+        ResetLineHighlight();
+        DeselectNode();
     }
 
     private void RemoveDrawingLine()
