@@ -23,6 +23,7 @@ public class FloorplanManager : MonoBehaviour
     bool _isDrawing = false;
     bool _objectIsDragged = false;
     bool _objectMoved = false;
+    bool _objectIsSelected = false;
 
     GameObject _currentNode, _newLine, _draggingObject, _selectedNode;
     Collider2D _mouseOverObject;
@@ -79,7 +80,7 @@ public class FloorplanManager : MonoBehaviour
             HandleOverlap(LineList.Last());
         } else
         {
-            if (IsMouseOverNode())
+            if (IsMouseOverNode() && !_objectIsSelected)
             {
                 _objectIsDragged = true;
                 _draggingObject = _mouseOverObject.transform.gameObject;
@@ -167,11 +168,13 @@ public class FloorplanManager : MonoBehaviour
 
     private void SelectNode(Collider2D targetObject)
     {
+        _objectIsSelected = true;
         _selectedNode = targetObject.transform.gameObject;
         UIActionManager.ShowNodePanel(targetObject.transform.position);
     }
     private void DeselectNode()
     {
+        _objectIsSelected = false;
         _selectedNode = null;
         UIActionManager.HideNodePanel();
     }
