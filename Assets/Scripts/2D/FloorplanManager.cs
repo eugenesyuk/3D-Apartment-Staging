@@ -80,7 +80,7 @@ public class FloorplanManager : MonoBehaviour
             HandleOverlap(LineList.Last());
         } else
         {
-            if (IsMouseOverNode() && !_objectIsSelected)
+            if (IsMouseOverNode() && _selectedNode != _mouseOverObject.transform.gameObject)
             {
                 _objectIsDragged = true;
                 _draggingObject = _mouseOverObject.transform.gameObject;
