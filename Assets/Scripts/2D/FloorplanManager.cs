@@ -1,10 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
-using UnityEngine.UIElements;
 using UnityEngine.EventSystems;
-using Unity.VisualScripting;
 
 public class FloorplanManager : MonoBehaviour
 {
