@@ -2,6 +2,8 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.EventSystems;
+using Unity.VisualScripting;
+using System;
 
 public class FloorplanManager : MonoBehaviour
 {
@@ -25,12 +27,12 @@ public class FloorplanManager : MonoBehaviour
     bool _objectMoved = false;
     bool _objectIsSelected = false;
 
-    GameObject _currentNode, _newLine, _draggingObject, _selectedNode;
+    GameObject _currentNode, _newLine, _draggingObject, _selectedNode, _highlightedObject;
     Collider2D _mouseOverObject;
 
     LineRenderer _highlightedLineX, _highlightedLineY;
     Color _highlightedLineXColor, _highlightedLineYColor;
-
+    Color? _highlightedObjectDefaultColor;
     Vector3 _initialMousePosition, _currentMousePosition;
 
     readonly int _layerFloorplan = Globals.Layers.Floorplan;
@@ -48,6 +50,34 @@ public class FloorplanManager : MonoBehaviour
         OnMouseLeftUp();
         OnUpdateDrawingLine();
         OnMouseRightDown();
+        OnMouseOverObject();
+    }
+
+    private void OnMouseOverObject()
+    {
+        if (IsMouseOverNode() && !_isDrawing)
+        {
+            _highlightedObject = _mouseOverObject.gameObject;
+            Renderer renderer = _mouseOverObject.GetComponent<Renderer>();
+
+            if (_highlightedObjectDefaultColor != null) return;
+
+            _highlightedObjectDefaultColor = renderer.material.color;
+            renderer.material.color = Globals.Node.HighlightColor;
+
+        } else
+        {
+            if (_highlightedObject != null && _highlightedObjectDefaultColor != null)
+            {
+                Renderer renderer = _highlightedObject.GetComponent<Renderer>();
+
+                if (renderer.material.color != _highlightedObjectDefaultColor)
+                {
+                    renderer.material.color = (Color)_highlightedObjectDefaultColor;
+                    _highlightedObjectDefaultColor = null;
+                }
+            }
+        }
     }
 
     void OnObjectDrag()
@@ -168,8 +198,10 @@ public class FloorplanManager : MonoBehaviour
 
     private void SelectNode(Collider2D targetObject)
     {
+        GameObject targetGameObject = targetObject.transform.gameObject;
+        if (_selectedNode != targetGameObject) DeselectNode();
         _objectIsSelected = true;
-        _selectedNode = targetObject.transform.gameObject;
+        _selectedNode = targetGameObject;
         UIActionManager.ShowNodePanel(targetObject.transform.position);
     }
     private void DeselectNode()
@@ -506,6 +538,8 @@ public class FloorplanManager : MonoBehaviour
 
         HouseObjectList.Clear();
         DestroyChildren(HouseObjectContainer);
+
+        DeselectNode();
 
         _isDrawing = false;
         DidDraw = false;
