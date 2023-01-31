@@ -50,33 +50,31 @@ public class FloorplanManager : MonoBehaviour
         OnMouseLeftUp();
         OnUpdateDrawingLine();
         OnMouseRightDown();
-        OnMouseOverObject();
+        OnMouseOverNode();
+        OnUpdatedSelected();
     }
 
-    private void OnMouseOverObject()
+    private void OnUpdatedSelected()
+    {
+        if(_selectedNode != null && _selectedNode.GetComponent<Renderer>().material.color != Globals.Node.HighlightColor)
+        {
+            _selectedNode.GetComponent<Renderer>().material.color = Globals.Node.HighlightColor;
+        }
+    }
+
+    private void OnMouseOverNode()
     {
         if (IsMouseOverNode() && !_isDrawing)
         {
             _highlightedObject = _mouseOverObject.gameObject;
             Renderer renderer = _mouseOverObject.GetComponent<Renderer>();
-
-            if (_highlightedObjectDefaultColor != null) return;
-
-            _highlightedObjectDefaultColor = renderer.material.color;
             renderer.material.color = Globals.Node.HighlightColor;
 
         } else
         {
-            if (_highlightedObject != null && _highlightedObjectDefaultColor != null)
-            {
-                Renderer renderer = _highlightedObject.GetComponent<Renderer>();
-
-                if (renderer.material.color != _highlightedObjectDefaultColor)
-                {
-                    renderer.material.color = (Color)_highlightedObjectDefaultColor;
-                    _highlightedObjectDefaultColor = null;
-                }
-            }
+            if (_highlightedObject == null) return;
+            Renderer renderer = _highlightedObject.GetComponent<Renderer>();
+            renderer.material.color = Globals.Node.Color;
         }
     }
 
@@ -203,12 +201,17 @@ public class FloorplanManager : MonoBehaviour
         _objectIsSelected = true;
         _selectedNode = targetGameObject;
         UIActionManager.ShowNodePanel(targetObject.transform.position);
+        targetGameObject.GetComponent<Renderer>().material.color = Globals.Node.HighlightColor;
     }
     private void DeselectNode()
     {
-        _objectIsSelected = false;
-        _selectedNode = null;
-        UIActionManager.HideNodePanel();
+        if(_selectedNode != null)
+        {
+            _selectedNode.GetComponent<Renderer>().material.color = Globals.Node.Color;
+            _objectIsSelected = false;
+            _selectedNode = null;
+            UIActionManager.HideNodePanel();
+        }
     }
 
     void AdjustAllLines()

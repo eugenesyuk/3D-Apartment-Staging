@@ -36,7 +36,8 @@ public static class Globals
 
     public class Node
     {
-        public static float Size = .5f;
+        public static float Size = .7f;
+        public static Color Color = new(0, .42f, 1, 1);
         public static Color HighlightColor = new(0, .7f, 1, 1);
     }
 }
