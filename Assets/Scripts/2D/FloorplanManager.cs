@@ -194,6 +194,15 @@ public class FloorplanManager : MonoBehaviour
         DeselectNode();
     }
 
+    public void DrawLineFromNode()
+    {
+        if (_selectedNode == null) return;
+        _isDrawing = true;
+        _currentNode = _selectedNode;
+        InstantiateDrawingLine(_selectedNode.transform.position);
+        DeselectNode();
+    }
+
     private void SelectNode(Collider2D targetObject)
     {
         GameObject targetGameObject = targetObject.transform.gameObject;

@@ -79,6 +79,11 @@ public class UIActionManager : MonoBehaviour
         Floorplan.RemoveSelectedNode();
     }
 
+    public void ClickedDrawLine()
+    {
+        Floorplan.DrawLineFromNode();
+    }
+
     public void ShowNodePanel(Vector3 position)
     {
         Vector2 localPoint;
