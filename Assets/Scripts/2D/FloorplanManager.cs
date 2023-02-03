@@ -25,14 +25,11 @@ public class FloorplanManager : MonoBehaviour
     bool _objectMoved = false;
     bool _objectIsSelected = false;
 
-    GameObject _currentNode, _newLine, _draggingObject, _selectedNode, _selectedLine, _highlightedObject;
-
-    Collider2D _mouseOverObject;
+    GameObject _currentNode, _newLine, _draggingObject, _selectedObject, _highlightedObject;
     RaycastHit _hitTarget;
 
     LineRenderer _highlightedLineX, _highlightedLineY;
     Color _highlightedLineXColor, _highlightedLineYColor;
-    Color? _highlightedObjectDefaultColor;
     Vector3 _initialMousePosition, _currentMousePosition;
 
     readonly int _layerFloorplan = Globals.Layers.Floorplan;
@@ -43,7 +40,6 @@ public class FloorplanManager : MonoBehaviour
         if (EventSystem.current.IsPointerOverGameObject()) return;
 
         _currentMousePosition = SnapToGridLines(Utils.GetCurrentMousePosition());
-        _mouseOverObject = Physics2D.OverlapPoint(_currentMousePosition);
         Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out _hitTarget);
 
         OnMouseLeftDown();
@@ -51,55 +47,83 @@ public class FloorplanManager : MonoBehaviour
         OnMouseLeftUp();
         OnUpdateDrawingLine();
         OnMouseRightDown();
+        ResetHighlight(_highlightedObject);
         OnMouseOver();
         OnUpdatedSelected();
     }
 
     private void OnUpdatedSelected()
     {
-        if(_selectedNode != null && _selectedNode.GetComponent<Renderer>().material.color != Globals.Node.HighlightColor)
+        if(_selectedObject == null) return;
+
+        var renderer = _selectedObject.GetComponent<Renderer>();
+        var targetColor = renderer.material.color;
+        var highlightColor = targetColor;
+
+        if (IsNode(_selectedObject) && targetColor != Globals.Node.HighlightColor)
         {
-            _selectedNode.GetComponent<Renderer>().material.color = Globals.Node.HighlightColor;
+            highlightColor = Globals.Node.HighlightColor;
+        }
+        
+        if (IsLine(_selectedObject) && targetColor != Globals.Line.HighlightColor)
+        {
+            highlightColor = Globals.Line.HighlightColor;
         }
 
-        if(_selectedLine != null && _selectedLine.GetComponent<Renderer>().material.color != Globals.Line.HighlightColor)
+        renderer.material.color = highlightColor;
+    }
+
+    bool IsNode(GameObject _object)
+    {
+        return _object.name.Contains("Node");
+    }
+    bool IsLine(GameObject _object)
+    {
+        return _object.name.Contains("Line");
+    }
+
+
+    private void ResetHighlight(GameObject _object)
+    {
+        if (_object == null) return;
+
+        Renderer renderer = _object.GetComponent<Renderer>();
+
+        var color = renderer.material.color;
+        var resetColor = color;
+
+        if (IsNode(_object))
         {
-            _selectedLine.GetComponent<Renderer>().material.color = Globals.Line.HighlightColor;
+            resetColor = Globals.Node.Color;
         }
+
+        if (IsLine(_object))
+        {
+            resetColor = Globals.Line.Color;
+        }
+
+        renderer.material.color = resetColor;
     }
 
     private void OnMouseOver()
     {
-        if (IsMouseOverNode() && !_isDrawing)
-        {
-            _highlightedObject = _mouseOverObject.gameObject;
-            Renderer renderer = _mouseOverObject.GetComponent<Renderer>();
-            renderer.material.color = Globals.Node.HighlightColor;
+        if (_isDrawing) return;
 
-        }
-        else if (IsMouseOverLine() && !_isDrawing)
+        GameObject target = _hitTarget.transform.gameObject;
+        Renderer renderer = target.GetComponent<Renderer>();
+
+        if (IsMouseOverNode()) 
         {
-            GameObject line = _hitTarget.transform.gameObject;
-            _highlightedObject = line;
-            Renderer renderer = line.GetComponent<Renderer>();
+            _highlightedObject = target;
+            renderer.material.color = Globals.Node.HighlightColor;
+        }
+
+        if(IsMouseOverLine())
+        {
+            _highlightedObject = target;
             renderer.material.color = Globals.Line.HighlightColor;
         }
 
-        if (_highlightedObject == null) return;
-
-        if(!IsMouseOverNode() && _highlightedObject.name.Contains("Node"))
-        {
-            if (_highlightedObject == null) return;
-            Renderer renderer = _highlightedObject.GetComponent<Renderer>();
-            renderer.material.color = Globals.Node.Color;
-        }
-
-        if (!IsMouseOverLine() && _highlightedObject.name.Contains("Line"))
-        {
-            if (_highlightedObject == null) return;
-            Renderer renderer = _highlightedObject.GetComponent<Renderer>();
-            renderer.material.color = Globals.Line.Color;
-        }
     }
 
     void OnObjectDrag()
@@ -133,10 +157,10 @@ public class FloorplanManager : MonoBehaviour
             InstantiateDrawingLine(_currentMousePosition);
         } else
         {
-            if (IsMouseOverNode() && _selectedNode != _mouseOverObject.transform.gameObject)
+            if (IsMouseOverNode() && _selectedObject != _hitTarget.transform.gameObject)
             {
                 _objectIsDragged = true;
-                _draggingObject = _mouseOverObject.transform.gameObject;
+                _draggingObject = _hitTarget.transform.gameObject;
             } else if (IsMouseOverLine())
             {
                 SelectLine(_hitTarget.transform.gameObject);
@@ -154,7 +178,7 @@ public class FloorplanManager : MonoBehaviour
 
     bool IsMouseOverNode()
     {
-        return _mouseOverObject != null && _mouseOverObject.GetComponent<Node>() != null ? true : false;
+        return _hitTarget.collider != null && _hitTarget.collider.name.Contains("Node");
     }
     bool IsMouseOverLine()
     {
@@ -178,7 +202,7 @@ public class FloorplanManager : MonoBehaviour
 
         if (IsMouseOverNode() && !_isDrawing && !_objectMoved)
         {
-            SelectNode(_mouseOverObject.gameObject);
+            SelectNode(_hitTarget.transform.gameObject);
         }
 
         _objectIsDragged = false;
@@ -188,12 +212,12 @@ public class FloorplanManager : MonoBehaviour
 
     public void RemoveSelectedNode()
     {
-        if (_selectedNode == null) return;
+        if (_selectedObject == null) return;
 
         LineList.RemoveAll(line =>
         {
             Line lineComponent = line.GetComponent<Line>();
-            if (lineComponent.startNode == _selectedNode || lineComponent.endNode == _selectedNode)
+            if (lineComponent.startNode == _selectedObject || lineComponent.endNode == _selectedObject)
             {
                 Destroy(line); 
                 return true;
@@ -207,16 +231,16 @@ public class FloorplanManager : MonoBehaviour
         {
             Node nodeComponent = node.GetComponent<Node>();
 
-            if (nodeComponent.AdjacentNodes.Contains(_selectedNode))
+            if (nodeComponent.AdjacentNodes.Contains(_selectedObject))
             {
-                nodeComponent.AdjacentNodes.Remove(_selectedNode);
+                nodeComponent.AdjacentNodes.Remove(_selectedObject);
             }
 
             if (nodeComponent.AdjacentNodes.Count == 0) unlinkedNodes.Add(node);
         }
 
-        NodeList.Remove(_selectedNode);
-        Destroy(_selectedNode);
+        NodeList.Remove(_selectedObject);
+        Destroy(_selectedObject);
 
         for (int i = 0; i < unlinkedNodes.Count - 1; i++)
         {
@@ -229,10 +253,10 @@ public class FloorplanManager : MonoBehaviour
 
     public void DrawLineFromNode()
     {
-        if (_selectedNode == null) return;
+        if (_selectedObject == null) return;
         _isDrawing = true;
-        _currentNode = _selectedNode;
-        InstantiateDrawingLine(_selectedNode.transform.position);
+        _currentNode = _selectedObject;
+        InstantiateDrawingLine(_selectedObject.transform.position);
         DeselectNode();
     }
 
@@ -240,38 +264,36 @@ public class FloorplanManager : MonoBehaviour
     {
         DeselectAll();
         _objectIsSelected = true;
-        _selectedNode = node;
+        _selectedObject = node;
         UIActionManager.ShowNodePanel(node.transform.position);
-        node.GetComponent<Renderer>().material.color = Globals.Node.HighlightColor;
     }
 
     private void SelectLine(GameObject line)
     {
         DeselectAll();
         _objectIsSelected = true;
-        _selectedLine = line;
+        _selectedObject = line;
         UIActionManager.ShowLinePanel(line.transform.position);
-        line.GetComponent<Renderer>().material.color = Globals.Node.HighlightColor;
     }
 
     private void DeselectNode()
     {
-        if (_selectedNode != null)
+        if (_selectedObject != null && IsNode(_selectedObject))
         {
-            _selectedNode.GetComponent<Renderer>().material.color = Globals.Node.Color;
+            ResetHighlight(_selectedObject);
             _objectIsSelected = false;
-            _selectedNode = null;
+            _selectedObject = null;
             UIActionManager.HideNodePanel();
         }
     }
 
     private void DeselectLine()
     {
-        if (_selectedLine != null)
+        if (_selectedObject != null && IsLine(_selectedObject))
         {
-            _selectedLine.GetComponent<Renderer>().material.color = Globals.Line.Color;
+            ResetHighlight(_selectedObject);
             _objectIsSelected = false;
-            _selectedLine = null;
+            _selectedObject = null;
             UIActionManager.HideLinePanel();
             UIActionManager.HideResizePanel();
         }
@@ -494,7 +516,7 @@ public class FloorplanManager : MonoBehaviour
             newNode.transform.parent = NodeContainer;
             newNode.name = "Node " + NodeList.Count();
             newNode.layer = _layerFloorplan;
-            newNode.AddComponent<BoxCollider2D>();
+            newNode.AddComponent<BoxCollider>();
             NodeList.Add(newNode);
         }
 
@@ -636,9 +658,9 @@ public class FloorplanManager : MonoBehaviour
 
     public void AddNode()
     {
-        if (!_selectedLine) return;
+        if (!_selectedObject) return;
 
-        var line = _selectedLine.GetComponent<Line>();
+        var line = _selectedObject.GetComponent<Line>();
         var startNode = line.startNode;
         var endNode = line.endNode;
 
@@ -661,23 +683,23 @@ public class FloorplanManager : MonoBehaviour
 
     public void ResizeSelectedLine(float length)
     {   
-       _selectedLine.GetComponent<Line>().Resize(length);
+       _selectedObject.GetComponent<Line>().Resize(length);
         AdjustAllLines();
         DeselectLine();
     }
 
     public void RemoveSelectedLine()
     {
-        if (_selectedLine == null) return;
-        LineList.Remove(_selectedLine);
-        Destroy(_selectedLine);
+        if (_selectedObject == null) return;
+        LineList.Remove(_selectedObject);
+        Destroy(_selectedObject);
         DeselectLine();
     }
 
     public float GetSelectedLineLength()
     {
-        if(!_selectedLine) return 0;
+        if(!_selectedObject) return 0;
 
-        return _selectedLine.GetComponent<Line>().length;
+        return _selectedObject.GetComponent<Line>().length;
     }
 }
