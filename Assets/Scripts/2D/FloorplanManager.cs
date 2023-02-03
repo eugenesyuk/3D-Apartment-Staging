@@ -2,7 +2,6 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.EventSystems;
-using Unity.VisualScripting;
 
 public class FloorplanManager : MonoBehaviour
 {
@@ -637,7 +636,27 @@ public class FloorplanManager : MonoBehaviour
 
     public void AddNode()
     {
-      
+        if (!_selectedLine) return;
+
+        var line = _selectedLine.GetComponent<Line>();
+        var startNode = line.startNode;
+        var endNode = line.endNode;
+
+        Vector3 middlePoint = (startNode.transform.position + endNode.transform.position) / 2f;
+        var middleNode = InstantiateNode(middlePoint);
+
+        middleNode.GetComponent<Node>().AdjacentNodes.Add(startNode);
+        middleNode.GetComponent<Node>().AdjacentNodes.Add(endNode);
+
+        line.endNode = middleNode;
+
+        startNode.GetComponent<Node>().AdjacentNodes.Add(middleNode);
+        endNode.GetComponent<Node>().AdjacentNodes.Add(middleNode);
+
+        InstantiateLine(middleNode, endNode);
+        AdjustAllLines();
+
+        _currentNode = null;
     }
 
     public void ResizeSelectedLine(float length)

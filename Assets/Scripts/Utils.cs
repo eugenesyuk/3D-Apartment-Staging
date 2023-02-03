@@ -11,7 +11,7 @@ public static class Utils
 
     public static Vector3 GetCurrentMousePosition()
     {
-        return Utils.GetMousePosition(Input.mousePosition).GetValueOrDefault();
+        return GetMousePosition(Input.mousePosition).GetValueOrDefault();
     }
     public static bool AddIfNotThere<T>(this List<T> list, T value)
     {
