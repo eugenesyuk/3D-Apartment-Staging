@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.EventSystems;
 using Unity.VisualScripting;
-using System;
 
 public class FloorplanManager : MonoBehaviour
 {
@@ -27,8 +26,10 @@ public class FloorplanManager : MonoBehaviour
     bool _objectMoved = false;
     bool _objectIsSelected = false;
 
-    GameObject _currentNode, _newLine, _draggingObject, _selectedNode, _highlightedObject;
+    GameObject _currentNode, _newLine, _draggingObject, _selectedNode, _selectedLine, _highlightedObject;
+
     Collider2D _mouseOverObject;
+    RaycastHit _hitTarget;
 
     LineRenderer _highlightedLineX, _highlightedLineY;
     Color _highlightedLineXColor, _highlightedLineYColor;
@@ -44,13 +45,14 @@ public class FloorplanManager : MonoBehaviour
 
         _currentMousePosition = SnapToGridLines(Utils.GetCurrentMousePosition());
         _mouseOverObject = Physics2D.OverlapPoint(_currentMousePosition);
+        Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out _hitTarget);
 
         OnMouseLeftDown();
         OnObjectDrag();
         OnMouseLeftUp();
         OnUpdateDrawingLine();
         OnMouseRightDown();
-        OnMouseOverNode();
+        OnMouseOver();
         OnUpdatedSelected();
     }
 
@@ -60,9 +62,14 @@ public class FloorplanManager : MonoBehaviour
         {
             _selectedNode.GetComponent<Renderer>().material.color = Globals.Node.HighlightColor;
         }
+
+        if(_selectedLine != null && _selectedLine.GetComponent<Renderer>().material.color != Globals.Line.HighlightColor)
+        {
+            _selectedLine.GetComponent<Renderer>().material.color = Globals.Line.HighlightColor;
+        }
     }
 
-    private void OnMouseOverNode()
+    private void OnMouseOver()
     {
         if (IsMouseOverNode() && !_isDrawing)
         {
@@ -70,11 +77,29 @@ public class FloorplanManager : MonoBehaviour
             Renderer renderer = _mouseOverObject.GetComponent<Renderer>();
             renderer.material.color = Globals.Node.HighlightColor;
 
-        } else
+        }
+        else if (IsMouseOverLine() && !_isDrawing)
+        {
+            GameObject line = _hitTarget.transform.gameObject;
+            _highlightedObject = line;
+            Renderer renderer = line.GetComponent<Renderer>();
+            renderer.material.color = Globals.Line.HighlightColor;
+        }
+
+        if (_highlightedObject == null) return;
+
+        if(!IsMouseOverNode() && _highlightedObject.name.Contains("Node"))
         {
             if (_highlightedObject == null) return;
             Renderer renderer = _highlightedObject.GetComponent<Renderer>();
             renderer.material.color = Globals.Node.Color;
+        }
+
+        if (!IsMouseOverLine() && _highlightedObject.name.Contains("Line"))
+        {
+            if (_highlightedObject == null) return;
+            Renderer renderer = _highlightedObject.GetComponent<Renderer>();
+            renderer.material.color = Globals.Line.Color;
         }
     }
 
@@ -106,21 +131,25 @@ public class FloorplanManager : MonoBehaviour
             DidDraw = true;
             SetPreviousLineEndNode();
             HandleOverlap(LineList.Last());
+            InstantiateDrawingLine(_currentMousePosition);
         } else
         {
             if (IsMouseOverNode() && _selectedNode != _mouseOverObject.transform.gameObject)
             {
                 _objectIsDragged = true;
                 _draggingObject = _mouseOverObject.transform.gameObject;
+            } else if (IsMouseOverLine())
+            {
+                SelectLine(_hitTarget.transform.gameObject);
             }
             else
             {
                 _isDrawing = true;
                 InstantiateNode(_currentMousePosition);
+                InstantiateDrawingLine(_currentMousePosition);
             }
         }
 
-        if(!_objectIsDragged) InstantiateDrawingLine(_currentMousePosition);
         DeselectNode();
     }
 
@@ -128,6 +157,11 @@ public class FloorplanManager : MonoBehaviour
     {
         return _mouseOverObject != null && _mouseOverObject.GetComponent<Node>() != null ? true : false;
     }
+    bool IsMouseOverLine()
+    {
+        return _hitTarget.collider != null && _hitTarget.collider.name.Contains("Line");
+    }
+
     void OnUpdateDrawingLine()
     {
         if (_newLine != null && _isDrawing)
@@ -145,7 +179,7 @@ public class FloorplanManager : MonoBehaviour
 
         if (IsMouseOverNode() && !_isDrawing && !_objectMoved)
         {
-            SelectNode(_mouseOverObject);
+            SelectNode(_mouseOverObject.gameObject);
         }
 
         _objectIsDragged = false;
@@ -203,24 +237,51 @@ public class FloorplanManager : MonoBehaviour
         DeselectNode();
     }
 
-    private void SelectNode(Collider2D targetObject)
+    private void SelectNode(GameObject node)
     {
-        GameObject targetGameObject = targetObject.transform.gameObject;
-        if (_selectedNode != targetGameObject) DeselectNode();
+        DeselectAll();
         _objectIsSelected = true;
-        _selectedNode = targetGameObject;
-        UIActionManager.ShowNodePanel(targetObject.transform.position);
-        targetGameObject.GetComponent<Renderer>().material.color = Globals.Node.HighlightColor;
+        _selectedNode = node;
+        UIActionManager.ShowNodePanel(node.transform.position);
+        node.GetComponent<Renderer>().material.color = Globals.Node.HighlightColor;
     }
+
+    private void SelectLine(GameObject line)
+    {
+        DeselectAll();
+        _objectIsSelected = true;
+        _selectedLine = line;
+        UIActionManager.ShowLinePanel(line.transform.position);
+        line.GetComponent<Renderer>().material.color = Globals.Node.HighlightColor;
+    }
+
     private void DeselectNode()
     {
-        if(_selectedNode != null)
+        if (_selectedNode != null)
         {
             _selectedNode.GetComponent<Renderer>().material.color = Globals.Node.Color;
             _objectIsSelected = false;
             _selectedNode = null;
             UIActionManager.HideNodePanel();
         }
+    }
+
+    private void DeselectLine()
+    {
+        if (_selectedLine != null)
+        {
+            _selectedLine.GetComponent<Renderer>().material.color = Globals.Line.Color;
+            _objectIsSelected = false;
+            _selectedLine = null;
+            UIActionManager.HideLinePanel();
+            UIActionManager.HideResizePanel();
+        }
+    }
+
+    private void DeselectAll()
+    {
+        DeselectNode();
+        DeselectLine();
     }
 
     void AdjustAllLines()
@@ -288,7 +349,7 @@ public class FloorplanManager : MonoBehaviour
     {
         highlightedLineRef = line;
         highlightedLineColorRef = line.colorGradient.Evaluate(.5f);
-        line.startColor = line.endColor = Globals.Line.HighlightColor;
+        line.startColor = line.endColor = Globals.GridLine.HighlightColor;
     }
 
     void ResetLineHighlight()
@@ -473,7 +534,7 @@ public class FloorplanManager : MonoBehaviour
 
         RemoveDrawingLine();
         ResetLineHighlight();
-        DeselectNode();
+        DeselectAll();
     }
 
     private void RemoveDrawingLine()
@@ -551,7 +612,7 @@ public class FloorplanManager : MonoBehaviour
         HouseObjectList.Clear();
         DestroyChildren(HouseObjectContainer);
 
-        DeselectNode();
+        DeselectAll();
 
         _isDrawing = false;
         DidDraw = false;
@@ -572,5 +633,32 @@ public class FloorplanManager : MonoBehaviour
             }
             else DestroyImmediate(child.gameObject);
         }
+    }
+
+    public void AddNode()
+    {
+      
+    }
+
+    public void ResizeSelectedLine(float length)
+    {   
+       _selectedLine.GetComponent<Line>().Resize(length);
+        AdjustAllLines();
+        DeselectLine();
+    }
+
+    public void RemoveSelectedLine()
+    {
+        if (_selectedLine == null) return;
+        LineList.Remove(_selectedLine);
+        Destroy(_selectedLine);
+        DeselectLine();
+    }
+
+    public float GetSelectedLineLength()
+    {
+        if(!_selectedLine) return 0;
+
+        return _selectedLine.GetComponent<Line>().length;
     }
 }

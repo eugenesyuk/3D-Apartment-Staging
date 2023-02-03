@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,14 +11,18 @@ public class UIActionManager : MonoBehaviour
     public Transform _3DCanvas, _2DCanvas;
     public FloorplanManager Floorplan;
     public WallGenerator WallGenerator;
-    public Button ClearButton, View3DButton, DeleteNode;
-    public GameObject NodeActionsPanel;
+    public Button ClearButton, View3DButton, DeleteNode, DeleteLine, ResizeLine, AddNode, ApplyResize;
+    public GameObject NodeActionsPanel, LineActionsPanel, ResizePanel;
+    public TMP_InputField MetersInput, CentimetersInput;
 
     private void Awake()
     {
         ClearButton.interactable = false;
         View3DButton.interactable = false;
+
         HideNodePanel();
+        HideLinePanel();
+        HideResizePanel();
 
         Reset3DRootToStart();
         Reset2DRootToStart();
@@ -84,6 +91,49 @@ public class UIActionManager : MonoBehaviour
         Floorplan.DrawLineFromNode();
     }
 
+    public void ClickedRemoveLine()
+    {
+        Floorplan.RemoveSelectedLine();
+    }
+
+    public void ClickedOpenResize()
+    {
+        float lineLength = Floorplan.GetSelectedLineLength();
+        int meters = (int)lineLength;
+        int centimeters = (int)Math.Round((lineLength * 100) % 100);
+
+        SetResizeDefaults(meters, centimeters);
+        ShowResizePanel();
+    }
+
+    private void SetResizeDefaults(int meters, int centimeters)
+    {
+        MetersInput.text = meters.ToString();
+        CentimetersInput.text = centimeters.ToString();
+    }
+
+    public void CentimetersChanged(string value)
+    {
+    }
+
+    public void MetersChanged(String value)
+    {
+
+    }
+
+    public void ClickedResizeLine()
+    {
+        string meters = MetersInput.text;
+        string centimeters = CentimetersInput.text;
+        float length = float.Parse($"{meters},{centimeters}");
+        Floorplan.ResizeSelectedLine(length);
+    }
+
+    public void ClickedAddNode()
+    {
+        Floorplan.AddNode();
+    }
+
     public void ShowNodePanel(Vector3 position)
     {
         Vector2 localPoint;
@@ -97,6 +147,31 @@ public class UIActionManager : MonoBehaviour
     public void HideNodePanel()
     {
         NodeActionsPanel.gameObject.SetActive(false);
+    }
+
+    public void ShowLinePanel(Vector3 position)
+    {
+        Vector2 localPoint;
+        RectTransform _2DCanvasRt = GameObject.Find("Grid Area").transform as RectTransform;
+        //Vector2 canvasRectHalf = new Vector2(_2DCanvasRt.rect.width / 2, _2DCanvasRt.rect.height / 2);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(_2DCanvasRt, position, Camera.current, out localPoint);
+        LineActionsPanel.transform.localPosition = localPoint / 8;
+        LineActionsPanel.gameObject.SetActive(true);
+    }
+
+    public void HideLinePanel()
+    {
+        LineActionsPanel.gameObject.SetActive(false);
+    }
+
+    public void HideResizePanel()
+    {
+        ResizePanel.gameObject.SetActive(false);
+    }
+
+    public void ShowResizePanel()
+    {
+        ResizePanel.gameObject.SetActive(true);
     }
 
     private void Reset3DRootToStart()

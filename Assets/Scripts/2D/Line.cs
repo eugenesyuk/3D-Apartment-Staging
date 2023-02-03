@@ -1,11 +1,13 @@
 ﻿using UnityEngine;
 using TMPro;
+using System;
 
 public class Line : MonoBehaviour
 {
 
     public GameObject startNode, endNode, sizeLabel;
     public string name;
+    public float length;
 
     public void RenderLineSizeLabel(Vector3 endPosition)
     {
@@ -20,14 +22,14 @@ public class Line : MonoBehaviour
     void renderSizeLabel(Vector3 startPoint, Vector3 endPoint)
     {
         TextMeshPro textMesh = getSizeLabelComponent();
-        float distance = Vector3.Distance(startPoint, endPoint) / Globals.ScaleFactor;
-
+        length = Vector3.Distance(startPoint, endPoint) / Globals.ScaleFactor;
+        
         textMesh.transform.position = Vector3.Lerp(startPoint, endPoint, 0.5f);
         textMesh.color = Color.black;
         textMesh.alignment = TextAlignmentOptions.Center;
         textMesh.fontSize = 10;
 
-        textMesh.text = distance > 0 ? distance.ToString("0.##") + "m" : "";
+        textMesh.text = length > 0 ? length.ToString("0.##") + "m" : "";
     }
 
     TextMeshPro getSizeLabelComponent()
@@ -75,5 +77,15 @@ public class Line : MonoBehaviour
     private void OnDestroy()
     {
         UnityEngine.Object.Destroy(sizeLabel);
+    }
+
+    public void Resize(float length)
+    {
+        float halfLength = length / 2f;
+        Vector3 middlePoint = (startNode.transform.position + endNode.transform.position) / 2f;
+        var headingMiddleToEnd = endNode.transform.position - middlePoint;
+        var headingMiddleToStart = startNode.transform.position - middlePoint;
+        startNode.transform.position = middlePoint + (headingMiddleToStart.normalized * halfLength * Globals.ScaleFactor);
+        endNode.transform.position = middlePoint + (headingMiddleToEnd.normalized * halfLength * Globals.ScaleFactor);
     }
 }

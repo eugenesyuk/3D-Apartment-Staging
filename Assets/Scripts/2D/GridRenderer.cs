@@ -110,13 +110,13 @@ public class GridRenderer : MonoBehaviour
             LineRenderer lineRenderer = go.GetComponent<LineRenderer>();
             lineRenderer.positionCount = 2;
             lineRenderer.startWidth = lineRenderer.endWidth = thickness;
-            lineRenderer.startColor = lineRenderer.endColor = Globals.Line.Color;
+            lineRenderer.startColor = lineRenderer.endColor = Globals.GridLine.Color;
             lineRenderer.SetPosition(0, pos0);
             lineRenderer.SetPosition(1, pos1);
 
             if (i % 5 == 0)
             {
-                lineRenderer.startColor = lineRenderer.endColor = Globals.Line.StrongColor;
+                lineRenderer.startColor = lineRenderer.endColor = Globals.GridLine.StrongColor;
                 lineRenderer.startWidth = lineRenderer.endWidth = thickness * thickLineMultiplier;
             }
 

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -21,8 +19,6 @@ public class LeftPanelDragItem : MonoBehaviour, IBeginDragHandler, IEndDragHandl
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        Debug.Log("OnBeginDrag");
-
         floorPlanContainer = GameObject.Find("Floorplan Container");
         houseObjectContainer = GameObject.Find("HouseObjectContainer").transform;
         attachableObjectContainer = GameObject.Find("AttachableObjectContainer").transform;

@@ -27,13 +27,18 @@ public static class Globals
         public static float Height = ((WallParams.Height - Window.Height) / 2) + Window.Height;
     }
 
-    public class Line
+    public class GridLine
     {
         public static Color Color = new(.75f, .75f, .75f, .5f);
         public static Color StrongColor = new(.75f, .75f, .75f, 1f);
         public static Color HighlightColor = new(0, .496f, 1f, 1f);
     }
 
+    public class Line
+    {
+        public static Color Color = new(0, 0, 0);
+        public static Color HighlightColor = new(0, .7f, 1, 1);
+    }
     public class Node
     {
         public static float Size = .7f;
