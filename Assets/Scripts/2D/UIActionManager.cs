@@ -7,13 +7,30 @@ using UnityEngine.UI;
 
 public class UIActionManager : MonoBehaviour
 {
-    public GameObject _3DRoot, _2DRoot, viewerCamera, isoCamera;
-    public Transform _3DCanvas, _2DCanvas;
-    public FloorplanManager Floorplan;
-    public WallGenerator WallGenerator;
-    public Button ClearButton, View3DButton, DeleteNode, DeleteLine, ResizeLine, AddNode, ApplyResize;
-    public GameObject NodeActionsPanel, LineActionsPanel, ResizePanel;
-    public TMP_InputField MetersInput, CentimetersInput;
+    [SerializeField]
+    GameObject _3DRoot, _2DRoot, viewerCamera, isoCamera;
+
+    [SerializeField]
+    Transform _3DCanvas, _2DCanvas;
+
+    [SerializeField]
+    FloorplanManager Floorplan;
+
+    [SerializeField]
+    WallGenerator WallGenerator;
+
+    [SerializeField] 
+    Button ClearButton, View3DButton, DeleteNode, DeleteLine, ResizeLine, AddNode, ApplyResize;
+
+    [SerializeField]
+    GameObject NodeActionsPanel, LineActionsPanel, ResizePanel;
+
+    [SerializeField]
+    TMP_InputField MetersInput, CentimetersInput;
+
+    [SerializeField]  
+    RectTransform _2DCanvasRt;
+  
 
     private void Awake()
     {
@@ -137,10 +154,9 @@ public class UIActionManager : MonoBehaviour
     public void ShowNodePanel(Vector3 position)
     {
         Vector2 localPoint;
-        RectTransform _2DCanvasRt = GameObject.Find("Grid Area").transform as RectTransform;
-        //Vector2 canvasRectHalf = new Vector2(_2DCanvasRt.rect.width / 2, _2DCanvasRt.rect.height / 2);
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(_2DCanvasRt, position, Camera.current, out localPoint);
-        NodeActionsPanel.transform.localPosition = localPoint / 8;
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(position);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(_2DCanvasRt, screenPos, null, out localPoint);
+        NodeActionsPanel.transform.localPosition = localPoint;
         NodeActionsPanel.gameObject.SetActive(true);
     }
 
@@ -149,13 +165,12 @@ public class UIActionManager : MonoBehaviour
         NodeActionsPanel.gameObject.SetActive(false);
     }
 
-    public void ShowLinePanel(Vector3 position)
+    public void ShowLinePanel()
     {
         Vector2 localPoint;
-        RectTransform _2DCanvasRt = GameObject.Find("Grid Area").transform as RectTransform;
-        //Vector2 canvasRectHalf = new Vector2(_2DCanvasRt.rect.width / 2, _2DCanvasRt.rect.height / 2);
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(_2DCanvasRt, position, Camera.current, out localPoint);
-        LineActionsPanel.transform.localPosition = localPoint / 8;
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(Utils.GetCurrentMousePosition());
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(_2DCanvasRt, screenPos, null, out localPoint);
+        LineActionsPanel.transform.localPosition = localPoint;
         LineActionsPanel.gameObject.SetActive(true);
     }
 

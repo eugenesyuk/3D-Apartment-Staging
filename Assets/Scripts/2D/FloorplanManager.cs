@@ -273,7 +273,7 @@ public class FloorplanManager : MonoBehaviour
         DeselectAll();
         _objectIsSelected = true;
         _selectedObject = line;
-        UIActionManager.ShowLinePanel(line.transform.position);
+        UIActionManager.ShowLinePanel();
     }
 
     private void DeselectNode()
