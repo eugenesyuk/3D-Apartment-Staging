@@ -107,7 +107,7 @@ public class FloorplanManager : MonoBehaviour
 
     private void OnMouseOver()
     {
-        if (_isDrawing) return;
+        if (_isDrawing || _hitTarget.transform == null) return;
 
         GameObject target = _hitTarget.transform.gameObject;
         Renderer renderer = target.GetComponent<Renderer>();

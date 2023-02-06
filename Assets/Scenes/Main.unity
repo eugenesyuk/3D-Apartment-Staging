@@ -1370,6 +1370,7 @@ GameObject:
   - component: {fileID: 559021882}
   - component: {fileID: 559021881}
   - component: {fileID: 559021884}
+  - component: {fileID: 559021885}
   m_Layer: 5
   m_Name: Window Button
   m_TagString: Untagged
@@ -1497,6 +1498,19 @@ MonoBehaviour:
   attachableHouseObject: {fileID: 137618, guid: 8673d1bf454069a479d0b0a253e4bd7c,
     type: 3}
   _isDragging: 0
+--- !u!65 &559021885
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 559021879}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &560916947
 GameObject:
   m_ObjectHideFlags: 0
@@ -4177,7 +4191,7 @@ Camera:
   far clip plane: 10
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 1
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
