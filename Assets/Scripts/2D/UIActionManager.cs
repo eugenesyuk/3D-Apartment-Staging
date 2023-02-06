@@ -30,7 +30,9 @@ public class UIActionManager : MonoBehaviour
 
     [SerializeField]  
     RectTransform _2DCanvasRt;
-  
+
+    [SerializeField]
+    Camera UICamera;
 
     private void Awake()
     {
@@ -155,7 +157,7 @@ public class UIActionManager : MonoBehaviour
     {
         Vector2 localPoint;
         Vector3 screenPos = Camera.main.WorldToScreenPoint(position);
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(_2DCanvasRt, screenPos, null, out localPoint);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(_2DCanvasRt, screenPos, UICamera, out localPoint);
         NodeActionsPanel.transform.localPosition = localPoint;
         NodeActionsPanel.gameObject.SetActive(true);
     }
@@ -169,7 +171,7 @@ public class UIActionManager : MonoBehaviour
     {
         Vector2 localPoint;
         Vector3 screenPos = Camera.main.WorldToScreenPoint(Utils.GetCurrentMousePosition());
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(_2DCanvasRt, screenPos, null, out localPoint);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(_2DCanvasRt, screenPos, UICamera, out localPoint);
         LineActionsPanel.transform.localPosition = localPoint;
         LineActionsPanel.gameObject.SetActive(true);
     }
