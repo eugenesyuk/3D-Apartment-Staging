@@ -63,6 +63,7 @@ public class HouseObject : MonoBehaviour {
 
         transform.localScale = new Vector3(multiplier *  aspect, multiplier, 1f);
         transform.name = name;
+        transform.gameObject.layer = Globals.Layers.Floorplan;
         this.isWallAttachable = isWallAttachable;
     }
 
