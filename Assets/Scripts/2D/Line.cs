@@ -9,6 +9,18 @@ public class Line : MonoBehaviour
     public string name;
     public float length;
 
+    FloorplanManager Floorplan;
+    Renderer Renderer;
+
+    public bool isMouseOver = false;
+    public bool isSelected = false;
+
+    void Start()
+    {
+        Renderer = gameObject.GetComponent<Renderer>();
+        Floorplan = GameObject.Find("Floorplan Container").GetComponent<FloorplanManager>();
+    }
+
     public void RenderLineSizeLabel(Vector3 endPosition)
     {
         renderSizeLabel(startNode.transform.position, endPosition);
@@ -23,7 +35,7 @@ public class Line : MonoBehaviour
     {
         TextMeshPro textMesh = getSizeLabelComponent();
         length = Vector3.Distance(startPoint, endPoint) / Globals.ScaleFactor;
-        
+
         textMesh.transform.position = Vector3.Lerp(startPoint, endPoint, 0.5f);
         textMesh.color = Color.black;
         textMesh.alignment = TextAlignmentOptions.Center;
@@ -63,7 +75,7 @@ public class Line : MonoBehaviour
     private void AdjustPositionScaleRotation(Vector3 startPosition, Vector3 endPosition)
     {
         GameObject line = gameObject;
-        Vector3 direction = endPosition - startPosition ;
+        Vector3 direction = endPosition - startPosition;
 
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         Quaternion newRotation = Quaternion.AngleAxis(angle, Vector3.forward);
@@ -76,7 +88,7 @@ public class Line : MonoBehaviour
 
     private void OnDestroy()
     {
-        UnityEngine.Object.Destroy(sizeLabel);
+        Destroy(sizeLabel);
     }
 
     public void Resize(float length)
@@ -87,5 +99,46 @@ public class Line : MonoBehaviour
         var headingMiddleToStart = startNode.transform.position - middlePoint;
         startNode.transform.position = middlePoint + (headingMiddleToStart.normalized * halfLength * Globals.ScaleFactor);
         endNode.transform.position = middlePoint + (headingMiddleToEnd.normalized * halfLength * Globals.ScaleFactor);
+    }
+    private void OnMouseEnter()
+    {
+        if (!Floorplan.CanSelect()) return;
+        isMouseOver = true;
+        Highlight();
+    }
+
+    private void OnMouseExit()
+    {
+        isMouseOver = false;
+        if (isSelected) return;
+        ResetHightlight();
+    }
+    private void OnMouseDown()
+    {
+        Select();
+    }
+
+    void Select()
+    {
+        if (!Floorplan.CanSelect()) return;
+        Floorplan.SelectLine(gameObject);
+        Highlight();
+        isSelected = true;
+    }
+
+    public void Deselect()
+    {
+        isSelected = false;
+        ResetHightlight();
+    }
+
+    void Highlight()
+    {
+        Renderer.material.color = Globals.Line.HighlightColor;
+    }
+
+    void ResetHightlight()
+    {
+        Renderer.material.color = Globals.Line.Color;
     }
 }

@@ -17,7 +17,6 @@ public class FloorplanManager : MonoBehaviour
     public List<GameObject> WindowList = new();
     public List<GameObject> HouseObjectList = new();
 
-    public bool SnapToGrid = true;
     public bool DidDraw = false;
 
     bool _isDrawing = false;
@@ -25,11 +24,9 @@ public class FloorplanManager : MonoBehaviour
     bool _objectMoved = false;
     bool _objectIsSelected = false;
 
-    GameObject _currentNode, _newLine, _draggingObject, _selectedObject, _highlightedObject;
-    RaycastHit _hitTarget;
-
-    LineRenderer _highlightedLineX, _highlightedLineY;
-    Color _highlightedLineXColor, _highlightedLineYColor;
+    GameObject _currentNode, _newLine, _draggingObject, _selectedObject;
+    
+    GridRenderer _gridRenderer;
     Vector3 _initialMousePosition, _currentMousePosition;
 
     readonly int _layerFloorplan = Globals.Layers.Floorplan;
@@ -38,39 +35,14 @@ public class FloorplanManager : MonoBehaviour
     void Update()
     {
         if (EventSystem.current.IsPointerOverGameObject()) return;
-
-        _currentMousePosition = SnapToGridLines(Utils.GetCurrentMousePosition());
-        Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition).origin, Camera.main.ScreenPointToRay(Input.mousePosition).direction, out _hitTarget, 100, Physics.DefaultRaycastLayers);
+        
+        _gridRenderer = GetComponent<GridRenderer>();
+        _currentMousePosition = _gridRenderer.SnapToGridLines(Utils.GetCurrentMousePosition());
 
         OnMouseLeftDown();
-        OnObjectDrag();
-        OnMouseLeftUp();
-        OnUpdateDrawingLine();
         OnMouseRightDown();
-        ResetHighlight(_highlightedObject);
-        OnMouseOver();
-        OnUpdatedSelected();
-    }
-
-    private void OnUpdatedSelected()
-    {
-        if(_selectedObject == null) return;
-
-        var renderer = _selectedObject.GetComponent<Renderer>();
-        var targetColor = renderer.material.color;
-        var highlightColor = targetColor;
-
-        if (IsNode(_selectedObject) && targetColor != Globals.Node.HighlightColor)
-        {
-            highlightColor = Globals.Node.HighlightColor;
-        }
-        
-        if (IsLine(_selectedObject) && targetColor != Globals.Line.HighlightColor)
-        {
-            highlightColor = Globals.Line.HighlightColor;
-        }
-
-        renderer.material.color = highlightColor;
+        OnObjectDrag();
+        OnUpdateDrawingLine();
     }
 
     bool IsNode(GameObject _object)
@@ -80,50 +52,6 @@ public class FloorplanManager : MonoBehaviour
     bool IsLine(GameObject _object)
     {
         return _object.name.Contains("Line");
-    }
-
-
-    private void ResetHighlight(GameObject _object)
-    {
-        if (_object == null) return;
-
-        Renderer renderer = _object.GetComponent<Renderer>();
-
-        var color = renderer.material.color;
-        var resetColor = color;
-
-        if (IsNode(_object))
-        {
-            resetColor = Globals.Node.Color;
-        }
-
-        if (IsLine(_object))
-        {
-            resetColor = Globals.Line.Color;
-        }
-
-        renderer.material.color = resetColor;
-    }
-
-    private void OnMouseOver()
-    {
-        if (_isDrawing || _hitTarget.transform == null) return;
-
-        GameObject target = _hitTarget.transform.gameObject;
-        Renderer renderer = target.GetComponent<Renderer>();
-
-        if (IsMouseOverNode()) 
-        {
-            _highlightedObject = target;
-            renderer.material.color = Globals.Node.HighlightColor;
-        }
-
-        if(IsMouseOverLine())
-        {
-            _highlightedObject = target;
-            renderer.material.color = Globals.Line.HighlightColor;
-        }
-
     }
 
     void OnObjectDrag()
@@ -141,7 +69,7 @@ public class FloorplanManager : MonoBehaviour
     {
         if (!Input.GetMouseButtonDown(0)) return;
 
-        _initialMousePosition = SnapToGridLines(Utils.GetCurrentMousePosition());
+        _initialMousePosition = _gridRenderer.SnapToGridLines(Utils.GetCurrentMousePosition());
 
         if (!gameObject.GetComponent<BoxCollider>().bounds.Contains(_currentMousePosition))
         {
@@ -155,34 +83,40 @@ public class FloorplanManager : MonoBehaviour
             SetPreviousLineEndNode();
             HandleOverlap(LineList.Last());
             InstantiateDrawingLine(_currentMousePosition);
-        } else
+            return;
+        }
+
+        if (!_objectIsDragged && !IsMouseOverLine())
         {
-            if (IsMouseOverNode() && _selectedObject != _hitTarget.transform.gameObject)
-            {
-                _objectIsDragged = true;
-                _draggingObject = _hitTarget.transform.gameObject;
-            } else if (IsMouseOverLine())
-            {
-                SelectLine(_hitTarget.transform.gameObject);
-            }
-            else
-            {
-                _isDrawing = true;
-                InstantiateNode(_currentMousePosition);
-                InstantiateDrawingLine(_currentMousePosition);
-            }
+            _isDrawing = true;
+            InstantiateNode(_currentMousePosition);
+            InstantiateDrawingLine(_currentMousePosition);
+            DeselectLine();
         }
 
         DeselectNode();
     }
+    private void OnMouseRightDown()
+    {
+        if (!Input.GetMouseButtonDown(1)) return;
+
+        RemoveDrawingLine();
+        DeselectAll();
+    }
+
+    public void StartDrag(GameObject dragObject)
+    {
+        _objectIsDragged = true;
+        _draggingObject = dragObject;
+    }
 
     bool IsMouseOverNode()
     {
-        return _hitTarget.collider != null && _hitTarget.collider.name.Contains("Node");
+        return NodeList.Exists(item => item.GetComponent<Node>().isMouseOver == true);
     }
     bool IsMouseOverLine()
     {
-        return _hitTarget.collider != null && _hitTarget.collider.name.Contains("Line");
+        return LineList.Exists(item => item.GetComponent<Line>().isMouseOver == true);
     }
 
     void OnUpdateDrawingLine()
@@ -196,15 +130,8 @@ public class FloorplanManager : MonoBehaviour
         }
     }
 
-    void OnMouseLeftUp()
+    public void ResetDrag()
     {
-        if (!Input.GetMouseButtonUp(0)) return;
-
-        if (IsMouseOverNode() && !_isDrawing && !_objectMoved)
-        {
-            SelectNode(_hitTarget.transform.gameObject);
-        }
-
         _objectIsDragged = false;
         _objectMoved = false;
         _draggingObject = null;
@@ -260,7 +187,7 @@ public class FloorplanManager : MonoBehaviour
         DeselectNode();
     }
 
-    private void SelectNode(GameObject node)
+    public void SelectNode(GameObject node)
     {
         DeselectAll();
         _objectIsSelected = true;
@@ -268,7 +195,7 @@ public class FloorplanManager : MonoBehaviour
         UIActionManager.ShowNodePanel(node.transform.position);
     }
 
-    private void SelectLine(GameObject line)
+    public void SelectLine(GameObject line)
     {
         DeselectAll();
         _objectIsSelected = true;
@@ -280,7 +207,7 @@ public class FloorplanManager : MonoBehaviour
     {
         if (_selectedObject != null && IsNode(_selectedObject))
         {
-            ResetHighlight(_selectedObject);
+            _selectedObject.GetComponent<Node>().Deselect();
             _objectIsSelected = false;
             _selectedObject = null;
             UIActionManager.HideNodePanel();
@@ -291,7 +218,7 @@ public class FloorplanManager : MonoBehaviour
     {
         if (_selectedObject != null && IsLine(_selectedObject))
         {
-            ResetHighlight(_selectedObject);
+            _selectedObject.GetComponent<Line>().Deselect();
             _objectIsSelected = false;
             _selectedObject = null;
             UIActionManager.HideLinePanel();
@@ -310,79 +237,6 @@ public class FloorplanManager : MonoBehaviour
         foreach(GameObject line in LineList)
         {
             line.GetComponent<Line>().AdjustLine();
-        }
-    }
-
-    Vector2 SnapToGridLines(Vector3 mousePosition)
-    {
-        if (!SnapToGrid) return mousePosition;
-
-        Vector2 resultPosition = mousePosition;
-        GridRenderer gridRenderer = gameObject.GetComponent<GridRenderer>();
-
-        GameObject closestGridLineY = gridRenderer.GetClosestLineY(mousePosition);
-        GameObject closestGridLineX = gridRenderer.GetClosestLineX(mousePosition);
-
-        LineRenderer lineYRenderer = closestGridLineY.GetComponent<LineRenderer>();
-        LineRenderer lineXRenderer = closestGridLineX.GetComponent<LineRenderer>();
-
-        Vector2 crossPointY = new(lineYRenderer.GetPosition(0).x, mousePosition.y);
-        Vector2 crossPointX = new(mousePosition.x, lineXRenderer.GetPosition(0).y);
-
-        float snapProximityFactor = Globals.SnapProxmityFactor;
-        float distanceToLineY = Vector2.Distance(mousePosition, crossPointY);
-        float distanceToLineX = Vector2.Distance(mousePosition, crossPointX);
-
-        ResetLineHighlight();
-
-        if (distanceToLineY < snapProximityFactor && distanceToLineX >= snapProximityFactor)
-        {
-            HighlightGridLine(ref _highlightedLineY, ref _highlightedLineYColor, lineYRenderer);
-            return crossPointY;
-        }
-        else if (distanceToLineX < snapProximityFactor && distanceToLineY >= snapProximityFactor)
-        {
-            HighlightGridLine(ref _highlightedLineX, ref _highlightedLineXColor, lineXRenderer);
-            return crossPointX;
-        }
-        else if (distanceToLineY < snapProximityFactor && distanceToLineX < snapProximityFactor)
-        {
-            Vector p1 = new(lineYRenderer.GetPosition(0).x, lineYRenderer.GetPosition(0).y);
-            Vector p2 = new(lineYRenderer.GetPosition(1).x, lineYRenderer.GetPosition(1).y);
-
-            Vector q1 = new(lineXRenderer.GetPosition(0).x, lineXRenderer.GetPosition(0).y);
-            Vector q2 = new(lineXRenderer.GetPosition(1).x, lineXRenderer.GetPosition(1).y);
-
-            if (Utils.LineSegementsIntersect(p1, p2, q1, q2, out Vector intersectionPoint, true))
-            {
-                HighlightGridLine(ref _highlightedLineY, ref _highlightedLineYColor, lineYRenderer);
-                HighlightGridLine(ref _highlightedLineX, ref _highlightedLineXColor, lineXRenderer);
-
-                return new Vector2((float)intersectionPoint.X, (float)intersectionPoint.Y);
-            }
-        }
-
-        return resultPosition;
-    }
-
-    void HighlightGridLine
-        (ref LineRenderer highlightedLineRef, ref Color highlightedLineColorRef, LineRenderer line)
-    {
-        highlightedLineRef = line;
-        highlightedLineColorRef = line.colorGradient.Evaluate(.5f);
-        line.startColor = line.endColor = Globals.GridLine.HighlightColor;
-    }
-
-    void ResetLineHighlight()
-    {
-        if (_highlightedLineX != null)
-        {
-            _highlightedLineX.startColor = _highlightedLineX.endColor = _highlightedLineXColor;
-        }
-
-        if (_highlightedLineY != null)
-        {
-            _highlightedLineY.startColor = _highlightedLineY.endColor = _highlightedLineYColor;
         }
     }
 
@@ -543,19 +397,10 @@ public class FloorplanManager : MonoBehaviour
         return null;
     }
 
-
     void SetPreviousLineEndNode()
     {
         LineList.Last().GetComponent<Line>().endNode = InstantiateNode(_currentMousePosition);
         LineList.Last().GetComponent<BoxCollider>().enabled = true;
-    }
-    private void OnMouseRightDown()
-    {
-        if (!Input.GetMouseButtonDown(1)) return;
-
-        RemoveDrawingLine();
-        ResetLineHighlight();
-        DeselectAll();
     }
 
     private void RemoveDrawingLine()
@@ -679,6 +524,7 @@ public class FloorplanManager : MonoBehaviour
         AdjustAllLines();
 
         _currentNode = null;
+        DeselectLine();
     }
 
     public void ResizeSelectedLine(float length)
@@ -701,5 +547,10 @@ public class FloorplanManager : MonoBehaviour
         if(!_selectedObject) return 0;
 
         return _selectedObject.GetComponent<Line>().length;
+    }
+
+    public bool CanSelect()
+    {
+        return _isDrawing || _objectMoved ? false : true;
     }
 }

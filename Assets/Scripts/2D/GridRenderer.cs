@@ -22,6 +22,12 @@ public class GridRenderer : MonoBehaviour
     readonly List<GameObject> gridLineListX = new();
     readonly List<GameObject> gridLineListY = new();
 
+    [SerializeField]
+    bool SnapToGrid = true;
+
+    LineRenderer _highlightedLineX, _highlightedLineY;
+    Color _highlightedLineXColor, _highlightedLineYColor;
+
     // Use this for initialization
     void Start()
     {
@@ -170,4 +176,77 @@ public class GridRenderer : MonoBehaviour
     {
         return GetClosestLine(gridLineListX, position);
     }
+
+    public Vector2 SnapToGridLines(Vector3 mousePosition)
+    {
+        if (!SnapToGrid) return mousePosition;
+
+        Vector2 resultPosition = mousePosition;
+
+        GameObject closestGridLineY = GetClosestLineY(mousePosition);
+        GameObject closestGridLineX = GetClosestLineX(mousePosition);
+
+        LineRenderer lineYRenderer = closestGridLineY.GetComponent<LineRenderer>();
+        LineRenderer lineXRenderer = closestGridLineX.GetComponent<LineRenderer>();
+
+        Vector2 crossPointY = new(lineYRenderer.GetPosition(0).x, mousePosition.y);
+        Vector2 crossPointX = new(mousePosition.x, lineXRenderer.GetPosition(0).y);
+
+        float snapProximityFactor = Globals.SnapProxmityFactor;
+        float distanceToLineY = Vector2.Distance(mousePosition, crossPointY);
+        float distanceToLineX = Vector2.Distance(mousePosition, crossPointX);
+
+        ResetLineHighlight();
+
+        if (distanceToLineY < snapProximityFactor && distanceToLineX >= snapProximityFactor)
+        {
+            HighlightGridLine(ref _highlightedLineY, ref _highlightedLineYColor, lineYRenderer);
+            return crossPointY;
+        }
+        else if (distanceToLineX < snapProximityFactor && distanceToLineY >= snapProximityFactor)
+        {
+            HighlightGridLine(ref _highlightedLineX, ref _highlightedLineXColor, lineXRenderer);
+            return crossPointX;
+        }
+        else if (distanceToLineY < snapProximityFactor && distanceToLineX < snapProximityFactor)
+        {
+            Vector p1 = new(lineYRenderer.GetPosition(0).x, lineYRenderer.GetPosition(0).y);
+            Vector p2 = new(lineYRenderer.GetPosition(1).x, lineYRenderer.GetPosition(1).y);
+
+            Vector q1 = new(lineXRenderer.GetPosition(0).x, lineXRenderer.GetPosition(0).y);
+            Vector q2 = new(lineXRenderer.GetPosition(1).x, lineXRenderer.GetPosition(1).y);
+
+            if (Utils.LineSegementsIntersect(p1, p2, q1, q2, out Vector intersectionPoint, true))
+            {
+                HighlightGridLine(ref _highlightedLineY, ref _highlightedLineYColor, lineYRenderer);
+                HighlightGridLine(ref _highlightedLineX, ref _highlightedLineXColor, lineXRenderer);
+
+                return new Vector2((float)intersectionPoint.X, (float)intersectionPoint.Y);
+            }
+        }
+
+        return resultPosition;
+    }
+
+    void HighlightGridLine
+        (ref LineRenderer highlightedLineRef, ref Color highlightedLineColorRef, LineRenderer line)
+    {
+        highlightedLineRef = line;
+        highlightedLineColorRef = line.colorGradient.Evaluate(.5f);
+        line.startColor = line.endColor = Globals.GridLine.HighlightColor;
+    }
+
+    void ResetLineHighlight()
+    {
+        if (_highlightedLineX != null)
+        {
+            _highlightedLineX.startColor = _highlightedLineX.endColor = _highlightedLineXColor;
+        }
+
+        if (_highlightedLineY != null)
+        {
+            _highlightedLineY.startColor = _highlightedLineY.endColor = _highlightedLineYColor;
+        }
+    }
+
 }
