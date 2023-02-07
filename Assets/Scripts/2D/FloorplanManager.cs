@@ -81,6 +81,7 @@ public class FloorplanManager : MonoBehaviour
         {
             DidDraw = true;
             SetPreviousLineEndNode();
+            AdjustAllLines();
             HandleOverlap(LineList.Last());
             InstantiateDrawingLine(_currentMousePosition);
             return;
