@@ -40,7 +40,7 @@ public class FloorplanManager : MonoBehaviour
         if (EventSystem.current.IsPointerOverGameObject()) return;
 
         _currentMousePosition = SnapToGridLines(Utils.GetCurrentMousePosition());
-        Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out _hitTarget);
+        Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition).origin, Camera.main.ScreenPointToRay(Input.mousePosition).direction, out _hitTarget, 100, Physics.DefaultRaycastLayers);
 
         OnMouseLeftDown();
         OnObjectDrag();
