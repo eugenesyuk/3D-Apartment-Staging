@@ -49,6 +49,7 @@ public class Line : MonoBehaviour
         if (sizeLabel == null)
         {
             sizeLabel = new GameObject(name + " Label");
+            sizeLabel.layer = Globals.Layers.Floorplan;
             sizeLabel.transform.parent = gameObject.transform.parent;
             return sizeLabel.AddComponent<TextMeshPro>();
         }
