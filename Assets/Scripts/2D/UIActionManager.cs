@@ -54,10 +54,16 @@ public class UIActionManager : MonoBehaviour
         if(Floorplan.DidDraw)
         {
             ClearButton.interactable = true;
-            View3DButton.interactable = true;
         } else
         {
             ClearButton.interactable = false;
+        }
+
+        if(Floorplan.HasPolygons)
+        {
+            View3DButton.interactable = true;
+        } else
+        {
             View3DButton.interactable = false;
         }
     }

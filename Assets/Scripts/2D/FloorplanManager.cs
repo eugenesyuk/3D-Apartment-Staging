@@ -28,6 +28,7 @@ public class FloorplanManager : MonoBehaviour
     List<GameObject> PolygonList = new();
 
     public bool DidDraw = false;
+    public bool HasPolygons = false;
 
     bool _isDrawing = false;
     bool _objectIsDragged = false;
@@ -58,6 +59,12 @@ public class FloorplanManager : MonoBehaviour
     private void UpdatePolygon()
     {
         GetPolygonsNodes();
+        SetHasPolygons();
+    }
+
+    private void SetHasPolygons()
+    {
+        HasPolygons = PolygonList.Count > 0 ? true : false;
     }
 
     private void GetPolygonsNodes()
