@@ -2,20 +2,30 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.EventSystems;
+using System;
 
 public class FloorplanManager : MonoBehaviour
 {
     public UIActionManager UIActionManager;
-    public GameObject LineSprite;
-    public GameObject NodeSprite;
 
-    public Transform LineContainer, NodeContainer,
-    HouseObjectContainer, AttachableObjectContainer;
+    [SerializeField]
+    GameObject LineSprite;
+
+    [SerializeField]
+    GameObject NodeSprite;
+
+    [SerializeField]
+    GameObject PolygonSprite;
+
+    [SerializeField]
+    Transform LineContainer, NodeContainer,
+    HouseObjectContainer, AttachableObjectContainer, PolygonContainer;
 
     public List<GameObject> NodeList = new();
     public List<GameObject> LineList = new();
     public List<GameObject> WindowList = new();
     public List<GameObject> HouseObjectList = new();
+    List<GameObject> PolygonList = new();
 
     public bool DidDraw = false;
 
@@ -43,6 +53,53 @@ public class FloorplanManager : MonoBehaviour
         OnMouseRightDown();
         OnObjectDrag();
         OnUpdateDrawingLine();
+    }
+
+    private void UpdatePolygon()
+    {
+        GetPolygonsNodes();
+    }
+
+    private void GetPolygonsNodes()
+    {
+        if (NodeList.Count < 3) return;
+
+        DestroyChildren(PolygonContainer);
+        PolygonList.Clear();
+
+        List<GameObject> polygonNodes = new();
+        GameObject firstAdjacent = null;
+
+        for(var i = 0; i < NodeList.Count; i++)
+        {
+            var currentElement = NodeList[i];
+            var nextElement = i + 1 < NodeList.Count ? NodeList[i + 1] : NodeList[0];
+            var prevElement = i - 1 >= 0 && i - 1 < NodeList.Count ? NodeList[i - 1] : null;
+            var currentNode = currentElement.GetComponent<Node>();
+
+            if (currentNode.AdjacentNodes.Count < 2)
+            {
+                firstAdjacent = null;
+                polygonNodes.Clear();
+                continue;
+            }
+
+            if (currentNode.AdjacentNodes.Contains(nextElement))
+            {
+                if (firstAdjacent == null) firstAdjacent = currentElement;
+                if (!polygonNodes.Contains(currentElement)) polygonNodes.Add(currentElement);
+            }
+
+            if (prevElement != null && prevElement == firstAdjacent) continue;
+
+            if(firstAdjacent != null && currentNode.AdjacentNodes.Contains(firstAdjacent))
+            {
+                if (!polygonNodes.Contains(currentElement)) polygonNodes.Add(currentElement);
+                PolygonList.Add(Polygon2D.Instantiate(new List<GameObject>(polygonNodes), PolygonSprite, PolygonContainer));
+                polygonNodes.Clear();
+                firstAdjacent = null;
+            }
+        }
     }
 
     bool IsNode(GameObject _object)
@@ -84,6 +141,7 @@ public class FloorplanManager : MonoBehaviour
             AdjustAllLines();
             HandleOverlap(LineList.Last());
             InstantiateDrawingLine(_currentMousePosition);
+            UpdatePolygon();
             return;
         }
 
@@ -133,6 +191,8 @@ public class FloorplanManager : MonoBehaviour
 
     public void ResetDrag()
     {
+        var draggingLine = LineList.Find(item => item.GetComponent<Line>().startNode == _draggingObject || item.GetComponent<Line>().endNode == _draggingObject);
+        HandleOverlap(draggingLine);
         _objectIsDragged = false;
         _objectMoved = false;
         _draggingObject = null;
@@ -176,6 +236,7 @@ public class FloorplanManager : MonoBehaviour
         }
 
         AdjustAllLines();
+        UpdatePolygon();
         DeselectNode();
     }
 
@@ -479,6 +540,9 @@ public class FloorplanManager : MonoBehaviour
         HouseObjectList.Clear();
         DestroyChildren(HouseObjectContainer);
 
+        PolygonList.Clear();
+        DestroyChildren(PolygonContainer);
+
         DeselectAll();
 
         _isDrawing = false;
@@ -541,6 +605,7 @@ public class FloorplanManager : MonoBehaviour
         LineList.Remove(_selectedObject);
         Destroy(_selectedObject);
         DeselectLine();
+        UpdatePolygon();
     }
 
     public float GetSelectedLineLength()

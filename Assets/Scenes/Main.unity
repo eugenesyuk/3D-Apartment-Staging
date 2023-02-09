@@ -737,6 +737,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 243536382}
   m_CullTransparentMesh: 1
+--- !u!1 &263147036
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 263147037}
+  m_Layer: 0
+  m_Name: PolygonContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &263147037
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 263147036}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 790138562}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &344653498
 GameObject:
   m_ObjectHideFlags: 0
@@ -2674,7 +2705,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 9.999878, y: -70}
+  m_AnchoredPosition: {x: 10, y: -70}
   m_SizeDelta: {x: -20, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &789152620
@@ -2848,6 +2879,7 @@ Transform:
   - {fileID: 929639037}
   - {fileID: 1710026822}
   - {fileID: 737164034}
+  - {fileID: 263147037}
   m_Father: {fileID: 239184884}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2896,10 +2928,13 @@ MonoBehaviour:
   UIActionManager: {fileID: 680263222}
   LineSprite: {fileID: 106298, guid: 569ba35a619a1d54d89ddfa7122819ff, type: 3}
   NodeSprite: {fileID: 144452, guid: 2a1c11192f2bb794aa56e1121863fd0b, type: 3}
+  PolygonSprite: {fileID: 742904662288549498, guid: e69938e1658697a45aa973523180b4a6,
+    type: 3}
   LineContainer: {fileID: 702577753}
   NodeContainer: {fileID: 1742429258}
   HouseObjectContainer: {fileID: 929639037}
   AttachableObjectContainer: {fileID: 1710026822}
+  PolygonContainer: {fileID: 263147037}
   NodeList: []
   LineList: []
   WindowList: []
@@ -6681,7 +6716,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 9.999878, y: -70}
+  m_AnchoredPosition: {x: 10, y: -70}
   m_SizeDelta: {x: -20, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1936255780
