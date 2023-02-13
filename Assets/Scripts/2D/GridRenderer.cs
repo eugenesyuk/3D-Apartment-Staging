@@ -14,8 +14,6 @@ public class GridRenderer : MonoBehaviour
     Vector3 bottomRight;
     Vector3 topRight;
 
-    readonly int minScale = 1;
-    readonly int maxScale = 40;
     readonly float thickLineMultiplier = 1.5f;
 
     List<GameObject> gridLineList = new();
@@ -31,7 +29,9 @@ public class GridRenderer : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        Camera.main.orthographicSize = Globals.Camera.MaxScale;
         GenerateGrid();
+        Camera.main.orthographicSize = Globals.Camera.StartSize;
     }
 
     void GenerateGrid()
@@ -45,7 +45,7 @@ public class GridRenderer : MonoBehaviour
         float yRatio = gridAreaRt.rect.height * 1.0f / appContainerRt.rect.height;
 
         Vector3 screenDimensions = CalculateScreenSizeInWorldCoords(xRatio, yRatio);
-        float pxThickness = 1f / (Screen.height / (Camera.main.orthographicSize * 2));
+        float pxThickness = LineThickness();
         RenderLines(screenDimensions, pxThickness);
         GetComponent<BoxCollider>().size = screenDimensions;
         GetComponent<BoxCollider>().center = new Vector2(Mathf.Abs(screenLeft.x - bottomLeft.x) / 2, -(screenTop.y - topRight.y) / 2);
@@ -66,15 +66,40 @@ public class GridRenderer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetAxis("Mouse ScrollWheel") > 0) // back
+        if (Input.GetAxis("Mouse ScrollWheel") > 0) 
         {
-            Camera.main.orthographicSize = Mathf.Max(Camera.main.orthographicSize - 1, minScale);
-            GenerateGrid();
+            ZoomIn(1);
         }
-        if (Input.GetAxis("Mouse ScrollWheel") < 0) // forward
+
+        if (Input.GetAxis("Mouse ScrollWheel") < 0)
         {
-            Camera.main.orthographicSize = Mathf.Min(Camera.main.orthographicSize + 1, maxScale);
-            GenerateGrid();
+            ZoomOut(1);
+        }
+
+        UpdateLinesThickness();
+    }
+    
+    public void ZoomOut(int step)
+    {
+        Camera.main.orthographicSize = Mathf.Min(Camera.main.orthographicSize + step, Globals.Camera.MaxScale);
+    }
+
+    public void ZoomIn(int step)
+    {
+        Camera.main.orthographicSize = Mathf.Max(Camera.main.orthographicSize - step, Globals.Camera.MinScale);
+    }
+
+    float LineThickness()
+    {
+        return 1f / (Screen.height / (Camera.main.orthographicSize * 2));
+    }
+
+    void UpdateLinesThickness()
+    {
+        foreach (GameObject lineObject in gridLineList)
+        {
+            var lineRenderer = lineObject.GetComponent<LineRenderer>();
+            lineRenderer.startWidth = lineRenderer.endWidth = LineThickness();
         }
     }
 

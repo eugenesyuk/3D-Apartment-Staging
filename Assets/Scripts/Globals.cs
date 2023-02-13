@@ -5,6 +5,14 @@ public static class Globals
     public static float ScaleFactor = 5f;
     public static float SnapProxmityFactor = .2f;
 
+    public class Camera
+    {
+        public static int MinScale = 1;
+        public static int MaxScale = 40;
+        public static int StartSize = 20;
+        public static int ZoomButtonsStep = 2;
+    }
+
     public class WallParams
     {
         public static float Height = 2.7f;

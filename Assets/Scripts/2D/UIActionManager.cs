@@ -19,6 +19,9 @@ public class UIActionManager : MonoBehaviour
     [SerializeField]
     WallGenerator WallGenerator;
 
+    [SerializeField]
+    GridRenderer GridRenderer;
+
     [SerializeField] 
     Button ClearButton, View3DButton, DeleteNode, DeleteLine, ResizeLine, AddNode, ApplyResize;
 
@@ -126,6 +129,16 @@ public class UIActionManager : MonoBehaviour
 
         SetResizeDefaults(meters, centimeters);
         ShowResizePanel();
+    }
+
+    public void ClickedZoomIn()
+    {
+        GridRenderer.ZoomIn(Globals.Camera.ZoomButtonsStep);
+    }
+
+    public void ClickedZoomOut()
+    {
+        GridRenderer.ZoomOut(Globals.Camera.ZoomButtonsStep);
     }
 
     private void SetResizeDefaults(int meters, int centimeters)
